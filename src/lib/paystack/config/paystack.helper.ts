@@ -1,7 +1,15 @@
 import * as crypto from 'crypto';
+import {
+  BadGatewayException,
+  HttpStatus,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { handleResponse } from 'src/middleware';
 import type {
   PaystackEnvironment,
   PaystackErrorResponse,
+  PaystackRequestContext,
   PaystackRequestOptions,
   PaystackWebhookHeaders,
 } from './paystack.types';
@@ -36,6 +44,14 @@ export const buildPaystackRequestInit = (
   redirect: 'error',
 });
 
+export const assertPaystackSecret = (secret: string): string => {
+  if (!secret) {
+    throw new InternalServerErrorException('Paystack secret key not set');
+  }
+
+  return secret;
+};
+
 export const parsePaystackResponse = async (
   response: Response,
 ): Promise<unknown> => {
@@ -62,6 +78,55 @@ export const isPaystackErrorResponse = (
 export const getPaystackErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : 'Request failed';
 
+export const requestPaystack = async <T = unknown>({
+  baseUrl,
+  secret,
+  endpoint,
+  options = {},
+}: PaystackRequestContext): Promise<T> => {
+  const paystackSecret = assertPaystackSecret(secret);
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${baseUrl}${endpoint}`,
+      buildPaystackRequestInit(paystackSecret, options),
+    );
+  } catch (error) {
+    throw new BadGatewayException({
+      message: 'Paystack request failed',
+      data: getPaystackErrorMessage(error),
+    });
+  }
+
+  const responseBody = await parsePaystackResponse(response);
+
+  if (response.status === 401) {
+    throw new UnauthorizedException('Unauthorized request to Paystack');
+  }
+
+  if (!response.ok) {
+    if (
+      isPaystackErrorResponse(responseBody) &&
+      responseBody.status === false
+    ) {
+      throw new handleResponse(
+        HttpStatus.BAD_REQUEST,
+        responseBody.message ?? 'Paystack request failed',
+        responseBody,
+      );
+    }
+
+    throw new handleResponse(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      'Request failed',
+      responseBody,
+    );
+  }
+
+  return responseBody as T;
+};
+
 export const getPaystackSignature = (
   headers: PaystackWebhookHeaders,
 ): string | undefined => {
@@ -86,5 +151,8 @@ export const isTimingSafeEqual = (
   const expected = Buffer.from(expectedSignature, 'hex');
   const received = Buffer.from(receivedSignature, 'hex');
 
-  return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+  return (
+    expected.length === received.length &&
+    crypto.timingSafeEqual(expected, received)
+  );
 };

@@ -1,10 +1,21 @@
-export type PaystackEnvironment = 'development' | 'production' | 'test' | 'provision';
+export type PaystackEnvironment =
+  | 'development'
+  | 'production'
+  | 'test'
+  | 'provision';
 
 export type PaystackHttpMethod = 'GET' | 'POST' | 'DELETE';
 
 export type PaystackRequestOptions = {
   method?: PaystackHttpMethod;
   body?: unknown;
+};
+
+export type PaystackRequestContext = {
+  baseUrl: string;
+  secret: string;
+  endpoint: string;
+  options?: PaystackRequestOptions;
 };
 
 export type PaystackResponse<T = unknown> = {
@@ -93,7 +104,10 @@ export type PaystackInitiateTransferInput = {
   reason: string;
 };
 
-export type PaystackWebhookHeaders = Record<string, string | string[] | undefined>;
+export type PaystackWebhookHeaders = Record<
+  string,
+  string | string[] | undefined
+>;
 
 export type PaystackWebhookEvent = {
   event?: string;

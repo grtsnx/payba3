@@ -1,26 +1,18 @@
-import {
-  BadGatewayException,
-  HttpStatus,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { handleResponse } from 'src/middleware';
 import {
-  buildPaystackRequestInit,
   createPaystackSignatureHash,
-  getPaystackErrorMessage,
   getPaystackPreferredBank,
   getPaystackSecret,
   getPaystackSignature,
-  isPaystackErrorResponse,
   isTimingSafeEqual,
-  parsePaystackResponse,
   PAYSTACK_BASE_URL,
+  requestPaystack,
 } from './config/paystack.helper';
 import type {
   PaystackBank,
   PaystackChargeAuthorizationInput,
+  PaystackCustomer,
   PaystackCreateCustomerInput,
   PaystackCreateSubscriptionInput,
   PaystackCreateTransferRecipientInput,
@@ -32,7 +24,6 @@ import type {
   PaystackSubscriptionCheckoutInput,
   PaystackWebhookEvent,
   PaystackWebhookHeaders,
-  PaystackRequestOptions,
 } from './config/paystack.types';
 
 @Injectable()
@@ -42,7 +33,8 @@ export class PaystackService {
   private readonly baseUrl = PAYSTACK_BASE_URL;
 
   constructor() {
-    const environment = (process.env.NODE_ENV ?? 'development') as PaystackEnvironment;
+    const environment = (process.env.NODE_ENV ??
+      'development') as PaystackEnvironment;
     const key = getPaystackSecret(environment);
 
     if (!key) {
@@ -55,88 +47,59 @@ export class PaystackService {
     this.preferredBank = getPaystackPreferredBank(environment);
   }
 
-  private async makeRequest<T = unknown>(
-    endpoint: string,
-    options: PaystackRequestOptions = {},
-  ): Promise<T> {
-    if (!this.paystackSecret) {
-      throw new InternalServerErrorException('Paystack secret key not set');
-    }
-
-    let response: Response;
-
-    try {
-      response = await fetch(
-        `${this.baseUrl}${endpoint}`,
-        buildPaystackRequestInit(this.paystackSecret, options),
-      );
-    } catch (error) {
-      throw new BadGatewayException({
-        message: 'Paystack request failed',
-        data: getPaystackErrorMessage(error),
-      });
-    }
-
-    const responseBody = await parsePaystackResponse(response);
-
-    if (response.status === HttpStatus.UNAUTHORIZED) {
-      throw new UnauthorizedException('Unauthorized request to Paystack');
-    }
-
-    if (!response.ok) {
-      if (isPaystackErrorResponse(responseBody) && responseBody.status === false) {
-        throw new handleResponse(
-          HttpStatus.BAD_REQUEST,
-          responseBody.message ?? 'Paystack request failed',
-          responseBody,
-        );
-      }
-
-      throw new handleResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        'Request failed',
-        responseBody,
-      );
-    }
-
-    return responseBody as T;
-  }
-
   async createPaystackCustomer(
     email: string,
     firstName: string,
     lastName: string,
     phone: string,
   ): Promise<unknown> {
-    return this.makeRequest('/customer', {
-      method: 'POST',
-      body: {
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        phone,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/customer',
+      options: {
+        method: 'POST',
+        body: {
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+        },
       },
     });
   }
 
   async createDedicatedAccount(customerCode: string): Promise<unknown> {
-    return this.makeRequest('/dedicated_account', {
-      method: 'POST',
-      body: {
-        customer: customerCode,
-        preferred_bank: this.preferredBank,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/dedicated_account',
+      options: {
+        method: 'POST',
+        body: {
+          customer: customerCode,
+          preferred_bank: this.preferredBank,
+        },
       },
     });
   }
 
   async retrieveDedicatedAccount(customerCode: string): Promise<unknown> {
-    return this.makeRequest(`/dedicated_account/${customerCode}`);
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/dedicated_account/${customerCode}`,
+    });
   }
 
   async retrieveCustomerCode(email: string): Promise<string | undefined> {
-    const response = await this.makeRequest<PaystackResponse<PaystackCustomer[]>>(
-      `/customer?email=${encodeURIComponent(email)}`,
-    );
+    const response = await requestPaystack<
+      PaystackResponse<PaystackCustomer[]>
+    >({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/customer?email=${encodeURIComponent(email)}`,
+    });
 
     return response.data[0]?.customer_code;
   }
@@ -147,13 +110,18 @@ export class PaystackService {
     currency: string,
     callback_url?: string,
   ): Promise<unknown> {
-    return this.makeRequest('/transaction/initialize', {
-      method: 'POST',
-      body: {
-        email,
-        amount: amount * 100,
-        currency,
-        callback_url,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/transaction/initialize',
+      options: {
+        method: 'POST',
+        body: {
+          email,
+          amount: amount * 100,
+          currency,
+          callback_url,
+        },
       },
     });
   }
@@ -173,9 +141,14 @@ export class PaystackService {
       payload.amount = Math.round(data.amountInKobo);
     }
 
-    return this.makeRequest('/transaction/initialize', {
-      method: 'POST',
-      body: payload,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/transaction/initialize',
+      options: {
+        method: 'POST',
+        body: payload,
+      },
     });
   }
 
@@ -191,45 +164,69 @@ export class PaystackService {
     }
     params.set('perPage', String(opts.perPage ?? 50));
     const qs = params.toString();
-    return this.makeRequest(`/subscription${qs ? `?${qs}` : ''}`);
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/subscription${qs ? `?${qs}` : ''}`,
+    });
   }
 
   async verifyTransaction(reference: string): Promise<unknown> {
-    return this.makeRequest(`/transaction/verify/${reference}`);
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/transaction/verify/${reference}`,
+    });
   }
 
   async initializeOneTimeCheckout(
     data: PaystackOneTimeCheckoutInput,
   ): Promise<unknown> {
-    return this.makeRequest('/transaction/initialize', {
-      method: 'POST',
-      body: {
-        email: data.email,
-        amount: Math.round(data.amountInKobo),
-        currency: data.currency ?? 'NGN',
-        callback_url: data.callback_url,
-        metadata: data.metadata,
-        reference: data.reference,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/transaction/initialize',
+      options: {
+        method: 'POST',
+        body: {
+          email: data.email,
+          amount: Math.round(data.amountInKobo),
+          currency: data.currency ?? 'NGN',
+          callback_url: data.callback_url,
+          metadata: data.metadata,
+          reference: data.reference,
+        },
       },
     });
   }
 
-  async chargeAuthorization(data: PaystackChargeAuthorizationInput): Promise<unknown> {
-    return this.makeRequest('/transaction/charge_authorization', {
-      method: 'POST',
-      body: {
-        email: data.email,
-        amount: Math.round(data.amountInKobo),
-        authorization_code: data.authorization_code,
-        reference: data.reference,
-        metadata: data.metadata,
-        currency: data.currency ?? 'NGN',
+  async chargeAuthorization(
+    data: PaystackChargeAuthorizationInput,
+  ): Promise<unknown> {
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/transaction/charge_authorization',
+      options: {
+        method: 'POST',
+        body: {
+          email: data.email,
+          amount: Math.round(data.amountInKobo),
+          authorization_code: data.authorization_code,
+          reference: data.reference,
+          metadata: data.metadata,
+          currency: data.currency ?? 'NGN',
+        },
       },
     });
   }
 
   async getBanks(): Promise<PaystackResponse<PaystackBank[]>> {
-    return this.makeRequest<PaystackResponse<PaystackBank[]>>('/bank');
+    return requestPaystack<PaystackResponse<PaystackBank[]>>({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/bank',
+    });
   }
 
   async getBankById(bankId: number): Promise<PaystackBank | null> {
@@ -247,12 +244,14 @@ export class PaystackService {
     bankCode: string,
   ): Promise<unknown> {
     try {
-      const response = await this.makeRequest<PaystackResponse>(
-        `/bank/resolve?account_number=${encodeURIComponent(accountNumber)}&bank_code=${encodeURIComponent(bankCode)}`,
-      );
+      const response = await requestPaystack<PaystackResponse>({
+        baseUrl: this.baseUrl,
+        secret: this.paystackSecret,
+        endpoint: `/bank/resolve?account_number=${encodeURIComponent(accountNumber)}&bank_code=${encodeURIComponent(bankCode)}`,
+      });
       return response.data;
     } catch (error) {
-      if (error instanceof handleResponse && error.getStatus() === HttpStatus.BAD_REQUEST) {
+      if (error instanceof handleResponse && error.getStatus() === 400) {
         throw new handleResponse(
           HttpStatus.BAD_REQUEST,
           'Invalid account number or bank code',
@@ -296,10 +295,16 @@ export class PaystackService {
   }
 
   async fetchPlan(planCode: string): Promise<unknown> {
-    return this.makeRequest(`/plan/${planCode}`);
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/plan/${planCode}`,
+    });
   }
 
-  async createSubscription(data: PaystackCreateSubscriptionInput): Promise<unknown> {
+  async createSubscription(
+    data: PaystackCreateSubscriptionInput,
+  ): Promise<unknown> {
     if (!data.authorization?.trim()) {
       throw new handleResponse(
         HttpStatus.BAD_REQUEST,
@@ -315,60 +320,104 @@ export class PaystackService {
       );
     }
 
-    return this.makeRequest('/subscription', {
-      method: 'POST',
-      body: data,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/subscription',
+      options: {
+        method: 'POST',
+        body: data,
+      },
     });
   }
 
   async fetchSubscription(idOrCode: string): Promise<unknown> {
-    return this.makeRequest(`/subscription/${idOrCode}`);
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/subscription/${idOrCode}`,
+    });
   }
 
   async disableSubscription(code: string, token: string): Promise<unknown> {
-    return this.makeRequest('/subscription/disable', {
-      method: 'POST',
-      body: {
-        code,
-        token,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/subscription/disable',
+      options: {
+        method: 'POST',
+        body: {
+          code,
+          token,
+        },
       },
     });
   }
 
   async createCustomer(data: PaystackCreateCustomerInput): Promise<unknown> {
-    return this.makeRequest('/customer', {
-      method: 'POST',
-      body: data,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/customer',
+      options: {
+        method: 'POST',
+        body: data,
+      },
     });
   }
 
   async fetchCustomerByEmail(email: string): Promise<unknown> {
-    return this.makeRequest(`/customer?email=${encodeURIComponent(email)}`);
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/customer?email=${encodeURIComponent(email)}`,
+    });
   }
 
   async createTransferRecipient(
     data: PaystackCreateTransferRecipientInput,
   ): Promise<unknown> {
-    return this.makeRequest('/transferrecipient', {
-      method: 'POST',
-      body: data,
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/transferrecipient',
+      options: {
+        method: 'POST',
+        body: data,
+      },
     });
   }
 
   async deleteTransferRecipient(idOrCode: string): Promise<unknown> {
-    return this.makeRequest(`/transferrecipient/${idOrCode}`, {
-      method: 'DELETE',
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: `/transferrecipient/${idOrCode}`,
+      options: {
+        method: 'DELETE',
+      },
     });
   }
 
-  async initiateTransfer(data: PaystackInitiateTransferInput): Promise<unknown> {
-    return this.makeRequest('/transfer', {
-      method: 'POST',
-      body: data,
+  async initiateTransfer(
+    data: PaystackInitiateTransferInput,
+  ): Promise<unknown> {
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/transfer',
+      options: {
+        method: 'POST',
+        body: data,
+      },
     });
   }
 
   async getPaystackBalance(): Promise<unknown> {
-    return this.makeRequest('/balance');
+    return requestPaystack({
+      baseUrl: this.baseUrl,
+      secret: this.paystackSecret,
+      endpoint: '/balance',
+    });
   }
 }

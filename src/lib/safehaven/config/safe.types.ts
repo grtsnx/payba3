@@ -42,3 +42,11 @@ export type SafehavenRequestOptions = {
 };
 
 export type SafehavenRequestHeaders = Record<string, string>;
+
+export type SafehavenRequestContext = {
+  baseUrl: string;
+  endpoint: string;
+  options?: SafehavenRequestOptions;
+  timeoutMs: number;
+  isProduction: boolean;
+};

@@ -1,21 +1,15 @@
-import {
-  BadGatewayException,
-  GatewayTimeoutException,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  buildSafehavenHeaders,
+  buildSafehavenTokenPayload,
+  createSafehavenTokenCache,
   getSafehavenBaseUrl,
-  getSafehavenErrorData,
-  parseSafehavenResponse,
+  getValidSafehavenAccessToken,
+  requestSafehaven,
 } from './config/safe.helper';
 import type {
   CreateSafehavenSubAccountPayload,
   SafehavenEnvironment,
-  SafehavenRequestOptions,
   SafehavenSubAccountResponse,
   SafehavenTokenCache,
   SafehavenTokenResponse,
@@ -53,24 +47,18 @@ export class SafehavenService {
   }
 
   async getAccessToken(): Promise<SafehavenTokenResponse> {
-    const response = await this.request<SafehavenTokenResponse>(
-      '/oauth2/token',
-      {
+    const response = await requestSafehaven<SafehavenTokenResponse>({
+      baseUrl: this.baseUrl,
+      endpoint: '/oauth2/token',
+      timeoutMs: this.timeoutMs,
+      isProduction: this.isProduction,
+      options: {
         method: 'POST',
-        body: {
-          grant_type: 'client_credentials',
-          client_assertion_type:
-            'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-          client_id: this.getClientId(),
-          client_assertion: this.getClientAssertion(),
-        },
+        body: buildSafehavenTokenPayload(this.clientId, this.clientAssertion),
       },
-    );
+    });
 
-    this.token = {
-      accessToken: response.access_token,
-      expiresAt: Date.now() + response.expires_in * 1000,
-    };
+    this.token = createSafehavenTokenCache(response);
 
     return response;
   }
@@ -78,109 +66,26 @@ export class SafehavenService {
   async createSubAccount(
     payload: CreateSafehavenSubAccountPayload,
   ): Promise<SafehavenSubAccountResponse> {
-    const accessToken = await this.getValidAccessToken();
+    const accessToken = await getValidSafehavenAccessToken(this.token, () =>
+      this.getAccessToken(),
+    );
 
-    return this.request<SafehavenSubAccountResponse>(
-      '/accounts/v2/subaccount',
-      {
+    return requestSafehaven<SafehavenSubAccountResponse>({
+      baseUrl: this.baseUrl,
+      endpoint: '/accounts/v2/subaccount',
+      timeoutMs: this.timeoutMs,
+      isProduction: this.isProduction,
+      options: {
         method: 'POST',
         accessToken,
         headers: {
-          ClientID: this.getClientId(),
+          ClientID: this.clientId,
         },
         body: {
           autoSweep: false,
           ...payload,
         },
       },
-    );
-  }
-
-  private async getValidAccessToken(): Promise<string> {
-    const tokenRefreshBufferMs = 60_000;
-
-    if (
-      this.token &&
-      this.token.expiresAt - tokenRefreshBufferMs > Date.now()
-    ) {
-      return this.token.accessToken;
-    }
-
-    const token = await this.getAccessToken();
-    return token.access_token;
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: SafehavenRequestOptions = {},
-  ): Promise<T> {
-    const headers = buildSafehavenHeaders(options);
-    const abortController = new AbortController();
-    const timeout = setTimeout(() => abortController.abort(), this.timeoutMs);
-
-    let response: Response;
-
-    try {
-      response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: options.method ?? 'GET',
-        headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
-        redirect: 'error',
-        signal: abortController.signal,
-      });
-    } catch (error) {
-      if (abortController.signal.aborted) {
-        throw new GatewayTimeoutException('Safehaven request timed out');
-      }
-
-      throw new BadGatewayException({
-        message: 'Safehaven request failed',
-        data: getSafehavenErrorData(error, this.isProduction),
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
-
-    const responseBody = await parseSafehavenResponse(response);
-
-    if (!response.ok) {
-      this.throwSafehavenError(response.status, responseBody);
-    }
-
-    return responseBody as T;
-  }
-
-  private throwSafehavenError(status: number, responseBody: unknown): never {
-    if (status === 401) {
-      throw new UnauthorizedException({
-        message: 'Unauthorized request to Safehaven',
-        data: getSafehavenErrorData(responseBody, this.isProduction),
-      });
-    }
-
-    throw new BadGatewayException({
-      message: 'Safehaven request failed',
-      data: getSafehavenErrorData(responseBody, this.isProduction),
     });
-  }
-
-  private getClientId(): string {
-    if (!this.clientId) {
-      throw new InternalServerErrorException(
-        'SAFEHAVEN_CLIENT_ID is not configured',
-      );
-    }
-
-    return this.clientId;
-  }
-
-  private getClientAssertion(): string {
-    if (!this.clientAssertion) {
-      throw new InternalServerErrorException(
-        'SAFEHAVEN_CLIENT_ASSERTION is not configured',
-      );
-    }
-
-    return this.clientAssertion;
   }
 }
