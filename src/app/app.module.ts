@@ -19,6 +19,18 @@ import { LibModule } from 'src/lib/lib.module';
     }),
     LoggerModule.forRoot({
       pinoHttp: {
+        redact: {
+          paths: [
+            'req.headers.authorization',
+            'req.headers.cookie',
+            'req.headers.clientid',
+            'res.headers.set-cookie',
+            'client_assertion',
+            'access_token',
+            'refresh_token',
+          ],
+          censor: '[REDACTED]',
+        },
         customSuccessMessage: (req, res) => {
           return `${req.method} ${req.url} - ${res.statusCode}`;
         },

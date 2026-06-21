@@ -1,16 +1,21 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
+type HandleResponseBody = {
+  statusCode: number;
+  statusType: string;
+  message: string;
+  data?: unknown;
+};
+
 export class handleResponse extends HttpException {
   constructor(
     public statusCode: number,
     public message: string,
-    public data?: any,
+    public data?: unknown,
   ) {
-    const statusType = HttpStatus[statusCode];
-
-    const response: any = {
+    const response: HandleResponseBody = {
       statusCode,
-      statusType,
+      statusType: HttpStatus[statusCode],
       message,
     };
 
@@ -21,8 +26,8 @@ export class handleResponse extends HttpException {
     super(response, statusCode);
   }
 
-  getResponse(): any {
-    const response: any = {
+  getResponse(): HandleResponseBody {
+    const response: HandleResponseBody = {
       statusCode: this.getStatus(),
       statusType: HttpStatus[this.getStatus()],
       message: this.message,

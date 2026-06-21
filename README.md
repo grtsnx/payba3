@@ -40,6 +40,13 @@ $ bun run start:prod
 
 Copy the `.env.sample` to `.env` and adjust the values. The server strictly validates environment schemas via `src/config/env.validation.ts` and will securely fail to start if variables are missing or incorrectly typed.
 
+Security-sensitive defaults:
+
+- `CORS_ORIGINS` is empty by default, so browsers from other origins are denied unless explicitly allowlisted.
+- `ENABLE_API_DOCS` is enabled outside production and disabled in production unless explicitly set.
+- `REQUEST_BODY_LIMIT`, `URLENCODED_PARAMETER_LIMIT`, and `TRUST_PROXY_HOPS` control request parsing and proxy trust.
+- `SAFEHAVEN_CLIENT_ID` and `SAFEHAVEN_CLIENT_ASSERTION` are required when `NODE_ENV=production`.
+
 Safehaven defaults to sandbox. To switch to live, set:
 
 ```bash

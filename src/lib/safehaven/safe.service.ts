@@ -1,70 +1,55 @@
 import {
   BadGatewayException,
+  GatewayTimeoutException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
-type SafehavenEnvironment = 'sandbox' | 'live';
-type HttpMethod = 'GET' | 'POST';
-
-type SafehavenTokenResponse = {
-  access_token: string;
-  client_id: string;
-  token_type: 'Bearer';
-  expires_in: number;
-  refresh_token: string;
-  ibs_client_id: string;
-  ibs_user_id: string;
-};
-
-export type CreateSafehavenSubAccountPayload = {
-  phoneNumber: string;
-  identityType: string;
-  identityId: string;
-  emailAddress: string;
-  externalReference: string;
-  autoSweep?: boolean;
-};
-
-export type SafehavenSubAccountResponse = {
-  statusCode: number;
-  message: string;
-  data: Record<string, unknown>;
-};
-
-type SafehavenRequestOptions = {
-  method?: HttpMethod;
-  body?: unknown;
-  accessToken?: string;
-  headers?: Record<string, string>;
-};
-
-const SAFEHAVEN_BASE_URLS: Record<SafehavenEnvironment, string> = {
-  sandbox: 'https://api.sandbox.safehavenmfb.com',
-  live: 'https://api.safehavenmfb.com',
-};
+import {
+  buildSafehavenHeaders,
+  getSafehavenBaseUrl,
+  getSafehavenErrorData,
+  parseSafehavenResponse,
+} from './config/safe.helper';
+import type {
+  CreateSafehavenSubAccountPayload,
+  SafehavenEnvironment,
+  SafehavenRequestOptions,
+  SafehavenSubAccountResponse,
+  SafehavenTokenCache,
+  SafehavenTokenResponse,
+} from './config/safe.types';
 
 @Injectable()
 export class SafehavenService {
   private readonly baseUrl: string;
   private readonly clientId: string;
   private readonly clientAssertion: string;
-  private token?: { accessToken: string; expiresAt: number };
+  private readonly isProduction: boolean;
+  private readonly timeoutMs: number;
+  private token?: SafehavenTokenCache;
 
   constructor(private readonly configService: ConfigService) {
+    this.isProduction =
+      this.configService.get<string>('NODE_ENV', 'development') ===
+      'production';
     const environment = this.configService.get<SafehavenEnvironment>(
       'SAFEHAVEN_ENVIRONMENT',
       'sandbox',
     );
 
-    this.baseUrl =
-      this.configService.get<string>('SAFEHAVEN_BASE_URL') ??
-      SAFEHAVEN_BASE_URLS[environment];
+    this.baseUrl = getSafehavenBaseUrl(
+      environment,
+      this.configService.get<string>('SAFEHAVEN_BASE_URL'),
+    );
     this.clientId = this.configService.get<string>('SAFEHAVEN_CLIENT_ID') ?? '';
     this.clientAssertion =
       this.configService.get<string>('SAFEHAVEN_CLIENT_ASSERTION') ?? '';
+    this.timeoutMs = this.configService.get<number>(
+      'SAFEHAVEN_TIMEOUT_MS',
+      10_000,
+    );
   }
 
   async getAccessToken(): Promise<SafehavenTokenResponse> {
@@ -114,7 +99,10 @@ export class SafehavenService {
   private async getValidAccessToken(): Promise<string> {
     const tokenRefreshBufferMs = 60_000;
 
-    if (this.token && this.token.expiresAt - tokenRefreshBufferMs > Date.now()) {
+    if (
+      this.token &&
+      this.token.expiresAt - tokenRefreshBufferMs > Date.now()
+    ) {
       return this.token.accessToken;
     }
 
@@ -126,15 +114,34 @@ export class SafehavenService {
     endpoint: string,
     options: SafehavenRequestOptions = {},
   ): Promise<T> {
-    const headers = this.buildHeaders(options);
+    const headers = buildSafehavenHeaders(options);
+    const abortController = new AbortController();
+    const timeout = setTimeout(() => abortController.abort(), this.timeoutMs);
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: options.method ?? 'GET',
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
+    let response: Response;
 
-    const responseBody = await this.parseResponse(response);
+    try {
+      response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: options.method ?? 'GET',
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        redirect: 'error',
+        signal: abortController.signal,
+      });
+    } catch (error) {
+      if (abortController.signal.aborted) {
+        throw new GatewayTimeoutException('Safehaven request timed out');
+      }
+
+      throw new BadGatewayException({
+        message: 'Safehaven request failed',
+        data: getSafehavenErrorData(error, this.isProduction),
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    const responseBody = await parseSafehavenResponse(response);
 
     if (!response.ok) {
       this.throwSafehavenError(response.status, responseBody);
@@ -143,42 +150,17 @@ export class SafehavenService {
     return responseBody as T;
   }
 
-  private buildHeaders(options: SafehavenRequestOptions) {
-    return {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...(options.accessToken
-        ? { authorization: `Bearer ${options.accessToken}` }
-        : {}),
-      ...options.headers,
-    };
-  }
-
-  private async parseResponse(response: Response): Promise<unknown> {
-    const text = await response.text();
-
-    if (!text) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(text);
-    } catch {
-      return text;
-    }
-  }
-
   private throwSafehavenError(status: number, responseBody: unknown): never {
     if (status === 401) {
       throw new UnauthorizedException({
         message: 'Unauthorized request to Safehaven',
-        data: responseBody,
+        data: getSafehavenErrorData(responseBody, this.isProduction),
       });
     }
 
     throw new BadGatewayException({
       message: 'Safehaven request failed',
-      data: responseBody,
+      data: getSafehavenErrorData(responseBody, this.isProduction),
     });
   }
 

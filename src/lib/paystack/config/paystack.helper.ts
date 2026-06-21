@@ -1,0 +1,90 @@
+import * as crypto from 'crypto';
+import type {
+  PaystackEnvironment,
+  PaystackErrorResponse,
+  PaystackRequestOptions,
+  PaystackWebhookHeaders,
+} from './paystack.types';
+
+export const PAYSTACK_BASE_URL = 'https://api.paystack.co';
+
+export const getPaystackSecret = (
+  environment: PaystackEnvironment,
+): string | undefined =>
+  environment === 'development'
+    ? process.env.PAYSTACK_SECRET_KEY
+    : process.env.PAYSTACK_SECRET_KEY_LIVE;
+
+export const getPaystackPreferredBank = (
+  environment: PaystackEnvironment,
+): string => (environment === 'development' ? 'test-bank' : 'titan-paystack');
+
+export const buildPaystackHeaders = (
+  secret: string,
+): Record<string, string> => ({
+  Authorization: `Bearer ${secret}`,
+  'Content-Type': 'application/json',
+});
+
+export const buildPaystackRequestInit = (
+  secret: string,
+  options: PaystackRequestOptions,
+): RequestInit => ({
+  method: options.method ?? 'GET',
+  headers: buildPaystackHeaders(secret),
+  body: options.body ? JSON.stringify(options.body) : undefined,
+  redirect: 'error',
+});
+
+export const parsePaystackResponse = async (
+  response: Response,
+): Promise<unknown> => {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
+  }
+};
+
+export const isPaystackErrorResponse = (
+  value: unknown,
+): value is PaystackErrorResponse =>
+  typeof value === 'object' &&
+  value !== null &&
+  ('status' in value || 'message' in value);
+
+export const getPaystackErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Request failed';
+
+export const getPaystackSignature = (
+  headers: PaystackWebhookHeaders,
+): string | undefined => {
+  const signature = headers['x-paystack-signature'];
+
+  return Array.isArray(signature) ? signature[0] : signature;
+};
+
+export const createPaystackSignatureHash = (
+  body: unknown,
+  secret: string,
+): string =>
+  crypto
+    .createHmac('sha512', secret)
+    .update(JSON.stringify(body))
+    .digest('hex');
+
+export const isTimingSafeEqual = (
+  expectedSignature: string,
+  receivedSignature: string,
+): boolean => {
+  const expected = Buffer.from(expectedSignature, 'hex');
+  const received = Buffer.from(receivedSignature, 'hex');
+
+  return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+};
