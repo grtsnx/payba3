@@ -40,6 +40,14 @@ $ bun run start:prod
 
 Copy the `.env.sample` to `.env` and adjust the values. The server strictly validates environment schemas via `src/config/env.validation.ts` and will securely fail to start if variables are missing or incorrectly typed.
 
+Safehaven defaults to sandbox. To switch to live, set:
+
+```bash
+SAFEHAVEN_ENVIRONMENT=live
+SAFEHAVEN_CLIENT_ID=your_client_id
+SAFEHAVEN_CLIENT_ASSERTION=your_jwt_client_assertion
+```
+
 ## Testing
 
 ```bash
