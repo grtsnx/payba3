@@ -19,7 +19,18 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 
   // Security Headers
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          scriptSrc: ["'self'", 'https://cdn.jsdelivr.net', "'unsafe-inline'"],
+          styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'", 'https://api.scalar.com'],
+        },
+      },
+    }),
+  );
 
   // Compression
   app.use(compression());
@@ -46,8 +57,8 @@ async function bootstrap() {
 
   // Configure Swagger
   const config = new DocumentBuilder()
-    .setTitle('JaxAgent SDK API')
-    .setDescription('The JaxAgent SDK API documentation')
+    .setTitle('payba3 API')
+    .setDescription('The payba3 API documentation')
     .setVersion('1.0')
     .build();
 
@@ -58,9 +69,7 @@ async function bootstrap() {
     '/reference',
     apiReference({
       theme: 'default',
-      spec: {
-        content: documentFactory,
-      },
+      url: '/docs-json',
     }),
   );
 

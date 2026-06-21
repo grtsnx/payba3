@@ -7,9 +7,11 @@ import { LoggerModule } from 'nestjs-pino';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from 'src/middleware';
 import { TerminusModule } from '@nestjs/terminus';
+import { LibModule } from 'src/lib/lib.module';
 
 @Module({
   imports: [
+    LibModule,
     TerminusModule,
     ConfigModule.forRoot({
       isGlobal: true,
