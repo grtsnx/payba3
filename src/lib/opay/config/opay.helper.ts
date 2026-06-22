@@ -4,7 +4,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { handleResponse } from 'src/middleware';
+import { handleResponse } from '../../shared/response.helper';
 import type {
   OPayBaseUrls,
   OPayCredentials,

@@ -78,6 +78,14 @@ pnpm add payba3
 bun add payba3
 ```
 
+payba3 ships compiled JavaScript, TypeScript declarations, and an npm exports map. It is tested with npm and Bun install smoke checks in CI. Yarn and pnpm can consume the same npm package metadata.
+
+payba3 declares the core Nest packages as peer dependencies so your application keeps one Nest runtime. If your package manager does not auto-install peer dependencies, install these alongside payba3:
+
+```bash
+npm install @nestjs/common @nestjs/core @nestjs/config reflect-metadata rxjs
+```
+
 If you are using the repository directly:
 
 ```bash
@@ -250,8 +258,12 @@ payba3 is intended to be easy for agents and automation workflows to reason abou
 bun install --frozen-lockfile
 bun run lint
 bun run test
+bun run test:providers
 bun run test:e2e
 bun run build
+bun run pack:dry
+bun run test:package
+bun run test:package:bun
 bun audit
 ```
 

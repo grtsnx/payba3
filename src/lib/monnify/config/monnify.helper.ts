@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { handleResponse } from 'src/middleware';
+import { handleResponse } from '../../shared/response.helper';
 import type {
   MonnifyAuthResponse,
   MonnifyBaseUrls,

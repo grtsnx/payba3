@@ -14,9 +14,12 @@ payba3 is a developer-first integration surface for multiple payment and verific
 
 ## Integration Rules
 
+- Import payba3 from the package root and select providers with `Payba3Service.use('<provider>')`.
 - Configure only the provider you use.
 - Use provider-specific environment switches such as `SAFEHAVEN_ENVIRONMENT`, `OPAY_ENVIRONMENT`, `MONNIFY_ENVIRONMENT`, `PAYSTACK_ENVIRONMENT`, `QOREID_ENVIRONMENT`, and `SEERBIT_ENVIRONMENT`.
 - Keep secrets server-side.
 - Verify provider webhooks before trusting callback payloads.
 - Verify transaction status server-side before delivering value.
 - Refresh expiring access tokens before they expire.
+- Core Nest packages are peer dependencies, so host applications should provide `@nestjs/common`, `@nestjs/core`, `@nestjs/config`, `reflect-metadata`, and `rxjs`.
+- Validate package readiness with `bun run pack:dry`, `bun run test:package`, and `bun run test:package:bun`.

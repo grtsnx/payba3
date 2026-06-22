@@ -82,6 +82,15 @@ jobs:
       - name: Build package
         run: bun run build
 
+      - name: Package dry run
+        run: bun run pack:dry
+
+      - name: Package install smoke / npm
+        run: bun run test:package
+
+      - name: Package install smoke / Bun
+        run: bun run test:package:bun
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v6
         with:
@@ -151,14 +160,16 @@ jobs:
             T --> P["Provider contract tests"]
             P --> E["E2E tests"]
             E --> B["3 Build"]
-            B --> S["4 Smoke test"]
+            B --> D["Package dry run"]
+            D --> I["npm + Bun install smoke"]
+            I --> S["4 Smoke test"]
           ```
 
           | Stage | Result |
           | --- | --- |
           | Audit + lint | `${{ needs.audit.result }}` |
           | Unit + provider + E2E tests | `${{ needs.test.result }}` |
-          | Build | `${{ needs.build.result }}` |
+          | Build + package smoke | `${{ needs.build.result }}` |
           | Smoke | `${{ needs.smoke.result }}` |
           MARKDOWN
 

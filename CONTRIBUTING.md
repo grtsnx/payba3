@@ -27,8 +27,12 @@ Run checks before opening a pull request:
 ```bash
 bun run lint
 bun run test
+bun run test:providers
 bun run test:e2e
 bun run build
+bun run pack:dry
+bun run test:package
+bun run test:package:bun
 bun audit
 ```
 
@@ -49,13 +53,15 @@ payba3/
 │   ├── payba3-logo.svg            # Full README/project logo
 │   └── payba3-mark.svg            # Compact icon/mark
 ├── scripts/
-│   └── package-release.sh         # Release archive builder
+│   ├── package-release.sh         # Release archive builder
+│   └── package-smoke-test.mjs     # Clean install/import package smoke test
 ├── src/
 │   ├── app/                       # Minimal app shell and health endpoint
 │   ├── lib/                       # payba3 provider integrations
 │   │   ├── payba3.service.ts      # One entry point for selecting a provider
 │   │   ├── payba3.types.ts        # Shared payba3 channel types
 │   │   ├── lib.module.ts          # Provider registration module
+│   │   ├── shared/                # Provider-safe shared helpers
 │   │   ├── paystack/              # Paystack channel
 │   │   ├── safehaven/             # Safehaven channel
 │   │   ├── seerbit/               # SeerBit channel
@@ -63,7 +69,7 @@ payba3/
 │   │   ├── mono/                  # Mono channel
 │   │   ├── monnify/               # Monnify channel
 │   │   └── qoreid/                # QoreID channel
-│   ├── middleware/                # Shared response, filters, and env validation
+│   ├── middleware/                # App filters and env validation for local app use
 │   ├── index.ts                   # Public package exports
 │   └── main.ts                    # Local app bootstrap
 ├── test/
