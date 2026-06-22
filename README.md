@@ -1,79 +1,142 @@
+<p align="center">
+  <img src="./assets/payba3-logo.svg" alt="Payba3" width="220" />
+</p>
+
+<p align="center">
+  One payment integration surface for many payment channels.
+</p>
+
+<p align="center">
+  <a href="./LICENSE">License</a>
+  ·
+  <a href="./CONTRIBUTING.md">Contributing</a>
+  ·
+  <a href="./SECURITY.md">Security</a>
+  ·
+  <a href="./SUPPORT.md">Support</a>
+</p>
+
 # Payba3
 
-Payba3 is a growing NestJS collection of payment-channel integrations. The goal is simple: developers should add their provider config, inject one Payba3 entry point, choose the provider they want, and call the provider without rebuilding the same payment plumbing every time.
+Payba3 is an open-source collection of payment-channel integrations built for developers, teams, codebases, automations, and AI agents that need a simple way to plug into different payment providers.
 
-Current channels:
+Configure the provider you want, select it through Payba3, and call the channel.
 
-- Paystack
-- Safehaven
-- Seerbit
-- OPay
-- Mono
-- Monnify
-- QoreID
+```ts
+const paystack = payba3.use('paystack');
 
-Payba3 is still growing, so the provider list and method coverage will expand over time.
+await paystack.initializeOneTimeCheckout({
+  email: 'customer@example.com',
+  amountInKobo: 500000,
+  currency: 'NGN',
+});
+```
 
-## What Payba3 Provides
+Payba3 is growing. More providers, methods, adapters, and examples will be added over time.
 
-- One NestJS `LibModule` that registers all supported channels.
-- One `Payba3Service` facade for selecting a provider by name.
-- Provider-specific services for direct access when you need full control.
-- Typed request payloads and response wrappers per provider.
-- Isolated helpers for auth, request signing, token refresh, parsing, and error handling.
-- Sandbox/live switching from environment variables.
-- Auto-refreshing access tokens for providers that expire tokens, including Safehaven, QoreID, and Monnify.
-- Local LLM reference files beside the matching provider code.
+## About
 
-## Quick Start
+Modern products rarely stay tied to one payment provider forever. A team may start with one checkout provider, add virtual accounts later, route a payout through another provider, run identity checks with a verification API, and still need a clean way for application code, scripts, background jobs, and AI agents to call those channels without learning every provider from scratch.
 
-Install dependencies:
+Payba3 is a developer-friendly payment integration layer for that reality. It gives each provider a named channel, keeps provider credentials in configuration, and exposes direct methods for common actions such as checkout, virtual accounts, transfers, subaccounts, account linking, and identity checks.
+
+Use Payba3 when you want:
+
+- One dependency for multiple payment and verification providers.
+- A simple provider selector: `payba3.use('provider')`.
+- Provider-specific methods without rewriting authentication and token-refresh logic.
+- A project that can be used by normal application code, workflow automations, scripts, and AI agents.
+- A growing open-source base where more providers can be added over time.
+
+## Supported Channels
+
+| Channel | Common use cases | Provider signup | Provider docs |
+| --- | --- | --- | --- |
+| Paystack | Checkout, subscriptions, transfers, dedicated accounts | [Create account](https://paystack.com/developers) | [Docs](https://paystack.com/docs/api/) |
+| Safehaven | Virtual accounts, subaccounts, banking APIs | [Sandbox](https://online.sandbox.safehavenmfb.com) | [Docs](https://safehavenmfb.readme.io/reference/introduction) |
+| SeerBit | Collections, virtual accounts, online payments | [Create account](https://www.seerbit.com/developers) | [Docs](https://doc.seerbit.com/) |
+| OPay | Checkout, signed payment APIs, refunds | [Merchant dashboard](https://merchant.opaycheckout.com) | [Docs](https://doc.opaycheckout.com/payment-authentication) |
+| Mono | Open banking, account linking, DirectPay, lookup | [Create account](https://mono.co/signup) | [Docs](https://docs.mono.co/docs/quickstart) |
+| Monnify | Checkout, reserved accounts, transfers, wallets | [Create account](https://app.monnify.com/create-account) | [Docs](https://developers.monnify.com/docs/collections/quickstart) |
+| QoreID | KYC, CAC lookup, identity verification | [Create account](https://dashboard.qoreid.com/dashboard) | [Docs](https://docs.qoreid.com/) |
+
+## Installation
+
+```bash
+npm install payba3
+```
+
+```bash
+yarn add payba3
+```
+
+```bash
+pnpm add payba3
+```
+
+```bash
+bun add payba3
+```
+
+If you are using the repository directly:
 
 ```bash
 bun install
 ```
 
-Run the app:
+## Quick Usage
 
-```bash
-bun run start:dev
-```
-
-Health check:
-
-```bash
-curl http://localhost:3000/v1/health
-```
-
-## Using One Entry Point
-
-Import `LibModule` in your Nest module, then inject `Payba3Service`.
+Register Payba3 in your application, then use `Payba3Service` to select a channel.
 
 ```ts
-import { Injectable } from '@nestjs/common';
-import { Payba3Service } from 'src/lib/payba3.service';
+import { Payba3Service } from 'payba3';
 
-@Injectable()
-export class CheckoutService {
+export class Payments {
   constructor(private readonly payba3: Payba3Service) {}
 
-  async checkout(email: string, amountInKobo: number) {
-    const paystack = this.payba3.use('paystack');
-
-    return paystack.initializeOneTimeCheckout({
-      email,
-      amountInKobo,
+  async collectWithPaystack() {
+    return this.payba3.use('paystack').initializeOneTimeCheckout({
+      email: 'customer@example.com',
+      amountInKobo: 250000,
       currency: 'NGN',
+      reference: 'order_123',
+    });
+  }
+
+  async createSafehavenSubAccount() {
+    return this.payba3.use('safehaven').createSubAccount({
+      phoneNumber: '08000000000',
+      identityType: 'vID',
+      identityId: 'identity-id',
+      emailAddress: 'customer@example.com',
+      externalReference: 'customer_123',
     });
   }
 }
 ```
 
-You can also inject a provider service directly, for example `SafehavenService`, `OPayService`, or `MonnifyService`.
+You can also use a channel directly when you want provider-specific methods:
 
-## Provider Config
+```ts
+await monnify.createReservedAccount({
+  accountReference: 'customer_123',
+  accountName: 'Jane Doe',
+  customerName: 'Jane Doe',
+  customerEmail: 'jane@example.com',
+  bvn: '00000000000',
+});
+```
 
-Only configure the providers you plan to use. Payba3 does not crash the app at startup when an unused provider is missing credentials; it validates credentials when that provider is called.
+## Configuration
+
+Only configure the providers you use. Missing credentials for unused providers should not block your application from starting.
+
+### Paystack
+
+```bash
+PAYSTACK_SECRET_KEY=
+PAYSTACK_SECRET_KEY_LIVE=
+```
 
 ### Safehaven
 
@@ -84,20 +147,13 @@ SAFEHAVEN_CLIENT_ASSERTION=
 SAFEHAVEN_TIMEOUT_MS=10000
 ```
 
-Switch to live:
+Switch to production:
 
 ```bash
 SAFEHAVEN_ENVIRONMENT=live
 ```
 
-### Paystack
-
-```bash
-PAYSTACK_SECRET_KEY=
-PAYSTACK_SECRET_KEY_LIVE=
-```
-
-### Seerbit
+### SeerBit
 
 ```bash
 SEERBIT_PUBLIC_KEY=
@@ -145,29 +201,42 @@ QOREID_LIVE_CLIENT=
 QOREID_LIVE_SECRET=
 ```
 
-## API Docs
+## Provider Selection
 
-Scalar and Swagger are available outside production:
+```ts
+payba3.use('paystack');
+payba3.use('safehaven');
+payba3.use('seerbit');
+payba3.use('opay');
+payba3.use('mono');
+payba3.use('monnify');
+payba3.use('qoreid');
+```
 
-- Scalar: `/reference`
-- Swagger: `/docs`
-- OpenAPI JSON: `/docs-json`
+Unsupported providers throw a clear error.
 
-In production, docs are disabled unless `ENABLE_API_DOCS=true`.
+```ts
+payba3.use('unknown'); // throws Unsupported payment channel
+```
 
-## Security Defaults
+## Token Handling
 
-- Helmet security headers with a docs-aware CSP.
-- Strict body-size and URL-encoded parameter limits.
-- CORS allowlist via `CORS_ORIGINS`.
-- Global validation pipe with whitelisting and non-whitelisted-field rejection.
-- Pino redaction for auth headers, tokens, cookies, and client assertions.
-- Provider secrets are read from env and are not hardcoded in source.
-- Token-bearing providers refresh before expiry instead of reusing stale tokens.
+Payba3 refreshes expiring provider tokens before they become stale.
 
-## Tests And CI Readiness
+- Safehaven uses `expires_in` from the token response.
+- QoreID uses `expiresIn` from the token response.
+- Monnify derives expiry from the JWT `exp` claim when available.
 
-Run the same checks locally:
+## For AI Agents And Automation
+
+Payba3 is intended to be easy for agents and automation workflows to reason about:
+
+- Provider names are explicit.
+- Configuration is environment based.
+- Request signing and token refresh are handled by Payba3.
+- Provider-specific actions remain discoverable through named channels.
+
+## Contributor Checks
 
 ```bash
 bun install --frozen-lockfile
@@ -178,31 +247,16 @@ bun run build
 bun audit
 ```
 
-Current test coverage includes:
+## Contributing
 
-- Payba3 provider facade selection.
-- Safehaven token cache and proactive refresh behavior.
-- QoreID token refresh behavior.
-- Monnify JWT expiry parsing and refresh behavior.
-- OPay public-key auth, signed auth, and callback signature verification.
-- Mono request headers and query helpers.
-- Paystack startup readiness without eager credential failure.
-- Basic app e2e route health.
+Payba3 welcomes provider additions, method coverage, docs, tests, examples, and security hardening.
 
-## LLM Reference Files
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
 
-Provider reference docs are stored beside their channel implementation:
+## Security
 
-- `src/lib/paystack/paystack_llm.txt`
-- `src/lib/opay/opay_llm.txt`
-- `src/lib/mono/mono_llm.txt`
-- `src/lib/monnify/monnify_llm.txt`
+Do not open public issues for vulnerabilities. Read [SECURITY.md](./SECURITY.md) for supported reporting channels and safe disclosure guidance.
 
-## Release Packaging
+## License
 
-Release packages are automated with GitHub Actions in `release.yml`.
-
-```bash
-bun run build
-bun run package:release staging 0.0.1
-```
+MIT. See [LICENSE](./LICENSE).

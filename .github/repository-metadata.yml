@@ -1,0 +1,21 @@
+# Reference metadata for maintainers.
+# GitHub repository descriptions and topics are stored on GitHub itself.
+# Keep this file in sync when updating repository settings.
+
+description: One payment integration surface for many payment channels.
+homepage: https://github.com/grtsnx/payba3
+topics:
+  - payments
+  - payment-gateway
+  - fintech
+  - open-banking
+  - virtual-accounts
+  - payment-integration
+  - ai-agents
+  - paystack
+  - safehaven
+  - seerbit
+  - opay
+  - mono
+  - monnify
+  - qoreid

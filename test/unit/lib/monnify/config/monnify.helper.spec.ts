@@ -4,8 +4,8 @@ import {
   getMonnifyBaseUrl,
   getValidMonnifyAccessToken,
   MONNIFY_BASE_URLS,
-} from './monnify.helper';
-import type { MonnifyTokenCache } from './monnify.types';
+} from 'src/lib/monnify/config/monnify.helper';
+import type { MonnifyTokenCache } from 'src/lib/monnify/config/monnify.types';
 
 const createJwt = (payload: Record<string, unknown>): string => {
   const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(

@@ -3,8 +3,8 @@ import {
   getSafehavenBaseUrl,
   getValidSafehavenAccessToken,
   SAFEHAVEN_BASE_URLS,
-} from './safe.helper';
-import type { SafehavenTokenCache } from './safe.types';
+} from 'src/lib/safehaven/config/safe.helper';
+import type { SafehavenTokenCache } from 'src/lib/safehaven/config/safe.types';
 
 describe('Safehaven helpers', () => {
   it('selects sandbox/live base URLs and trims overrides', () => {

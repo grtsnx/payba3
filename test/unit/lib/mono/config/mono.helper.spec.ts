@@ -2,7 +2,7 @@ import {
   buildMonoHeaders,
   buildMonoQuery,
   getMonoBaseUrl,
-} from './mono.helper';
+} from 'src/lib/mono/config/mono.helper';
 
 describe('Mono helpers', () => {
   it('builds required mono-sec-key auth headers', () => {

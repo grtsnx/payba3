@@ -2,38 +2,161 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  BUN_VERSION: latest
 
 jobs:
-  build-and-test:
+  audit:
+    name: 1 / Audit and lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
-      - name: Audit / Lint
+      - name: Lint
         run: bun run lint
 
-      - name: Test
+      - name: Dependency audit
+        run: bun audit
+
+  test:
+    name: 2 / Test
+    runs-on: ubuntu-latest
+    needs: audit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Unit tests
         run: bun run test
 
-      - name: Build
+      - name: E2E tests
+        run: bun run test:e2e
+
+  build:
+    name: 3 / Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build package
         run: bun run build
 
-      - name: Smoke Test
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: payba3-dist
+          path: dist
+          if-no-files-found: error
+
+  smoke:
+    name: 4 / Smoke
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: payba3-dist
+          path: dist
+
+      - name: Smoke test built app
+        shell: bash
         run: |
-          bun run start:prod &
-          sleep 5
-          curl -f http://localhost:3000/v1/ || exit 1
+          set -euo pipefail
+          bun run start:prod > /tmp/payba3-smoke.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+
+          for _ in {1..30}; do
+            if curl -fsS http://localhost:3000/v1/ >/tmp/payba3-smoke-response.txt; then
+              grep -q "Hello World!" /tmp/payba3-smoke-response.txt
+              curl -fsS http://localhost:3000/v1/health >/tmp/payba3-health-response.json
+              echo "Smoke test passed."
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "Smoke test failed. App log:"
+          cat /tmp/payba3-smoke.log
+          exit 1
+
+  ci-map:
+    name: CI map
+    runs-on: ubuntu-latest
+    needs: [audit, test, build, smoke]
+    if: always()
+    steps:
+      - name: Write CI map
+        shell: bash
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'MARKDOWN'
+          ## Payba3 CI Map
+
+          ```mermaid
+          flowchart LR
+            A["1 Audit + lint"] --> T["2 Unit + E2E tests"]
+            T --> B["3 Build"]
+            B --> S["4 Smoke test"]
+          ```
+
+          | Stage | Result |
+          | --- | --- |
+          | Audit + lint | `${{ needs.audit.result }}` |
+          | Tests | `${{ needs.test.result }}` |
+          | Build | `${{ needs.build.result }}` |
+          | Smoke | `${{ needs.smoke.result }}` |
+          MARKDOWN
+
+      - name: Fail if any CI stage failed
+        if: ${{ contains(join(needs.*.result, ','), 'failure') || contains(join(needs.*.result, ','), 'cancelled') }}
+        run: exit 1

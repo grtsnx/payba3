@@ -1,10 +1,30 @@
 {
   "name": "payba3",
   "version": "0.0.1",
-  "description": "A growing NestJS collection of payment-channel integrations for developers.",
+  "description": "One payment integration surface for many payment channels.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
   "author": "",
-  "private": true,
-  "license": "UNLICENSED",
+  "private": false,
+  "license": "MIT",
+  "keywords": [
+    "payments",
+    "paystack",
+    "safehaven",
+    "seerbit",
+    "opay",
+    "mono",
+    "monnify",
+    "qoreid",
+    "fintech",
+    "ai-agents"
+  ],
   "overrides": {
     "js-yaml": "4.2.0",
     "multer": "2.2.0"
@@ -80,17 +100,19 @@
       "ts"
     ],
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
+      "^src/(.*)$": "<rootDir>/src/$1"
     },
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "rootDir": ".",
+    "testRegex": "test/.*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "src/**/*.(t|j)s",
+      "!src/**/*.module.ts",
+      "!src/main.ts"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "coverage",
     "testEnvironment": "node"
   }
 }

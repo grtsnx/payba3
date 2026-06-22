@@ -20,9 +20,6 @@ on:
     tags:
       - "v*"
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   package-release:
     name: Package and release
@@ -33,12 +30,12 @@ jobs:
       RELEASE_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.target_env || 'production' }}
       PACKAGE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_type == 'tag' && github.ref_name || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -61,7 +58,7 @@ jobs:
           scripts/package-release.sh "$RELEASE_ENV" "$PACKAGE_VERSION"
 
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.package.outputs.package_slug }}-${{ steps.package.outputs.release_env }}-${{ steps.package.outputs.version_label }}
           path: ${{ steps.package.outputs.archive_path }}

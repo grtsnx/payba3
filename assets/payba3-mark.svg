@@ -1,0 +1,11 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Payba3 mark</title>
+  <desc id="desc">Three payment channels converging into a single Payba3 mark.</desc>
+  <rect width="256" height="256" rx="56" fill="#0F172A"/>
+  <path d="M68 72H144C174.928 72 200 97.0721 200 128C200 158.928 174.928 184 144 184H112V222H68V72Z" fill="#F8FAFC"/>
+  <path d="M112 112H140C148.837 112 156 119.163 156 128C156 136.837 148.837 144 140 144H112V112Z" fill="#22C55E"/>
+  <path d="M192 72H224L184 222H152L192 72Z" fill="#22C55E"/>
+  <circle cx="196" cy="74" r="10" fill="#38BDF8"/>
+  <circle cx="174" cy="148" r="10" fill="#38BDF8"/>
+  <circle cx="152" cy="222" r="10" fill="#38BDF8"/>
+</svg>

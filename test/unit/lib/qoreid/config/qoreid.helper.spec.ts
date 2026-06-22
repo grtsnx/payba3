@@ -1,8 +1,8 @@
 import {
   getValidQoreIDAccessToken,
   isQoreIDTokenResponse,
-} from './qoreid.helper';
-import type { QoreIDTokenCache } from './qoreid.types';
+} from 'src/lib/qoreid/config/qoreid.helper';
+import type { QoreIDTokenCache } from 'src/lib/qoreid/config/qoreid.types';
 
 describe('QoreID helpers', () => {
   it('identifies token responses', () => {

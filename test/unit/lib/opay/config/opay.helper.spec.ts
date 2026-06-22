@@ -4,8 +4,8 @@ import {
   getOPayBaseUrl,
   OPAY_BASE_URLS,
   verifyOPayCallbackSignature,
-} from './opay.helper';
-import type { OPayCredentials } from './opay.types';
+} from 'src/lib/opay/config/opay.helper';
+import type { OPayCredentials } from 'src/lib/opay/config/opay.types';
 
 describe('OPay helpers', () => {
   const credentials: OPayCredentials = {

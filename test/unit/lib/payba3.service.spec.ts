@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
-import { Payba3Service } from './payba3.service';
-import type { Payba3ChannelMap } from './payba3.types';
+import { Payba3Service } from 'src/lib/payba3.service';
+import type { Payba3ChannelMap } from 'src/lib/payba3.types';
 
 const createChannels = (): Payba3ChannelMap =>
   ({

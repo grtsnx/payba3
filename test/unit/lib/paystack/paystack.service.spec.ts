@@ -1,4 +1,4 @@
-import { PaystackService } from './paystack.service';
+import { PaystackService } from 'src/lib/paystack/paystack.service';
 
 describe('PaystackService', () => {
   const originalEnv = process.env;
