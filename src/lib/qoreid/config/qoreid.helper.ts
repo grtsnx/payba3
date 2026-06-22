@@ -5,6 +5,9 @@ import {
 } from '@nestjs/common';
 import { handleResponse } from 'src/middleware';
 import type {
+  NormalizedQoreIDEnvironment,
+  QoreIDCacLevel,
+  QoreIDCacVersion,
   QoreIDCredentials,
   QoreIDEnvironment,
   QoreIDRequestContext,
@@ -14,21 +17,43 @@ import type {
 } from './qoreid.types';
 
 const TOKEN_REFRESH_BUFFER_MS = 60_000;
+const DEFAULT_TOKEN_TTL_SECONDS = 50 * 60;
 
-export const QOREID_BASE_URL = 'https://api.qoreid.com';
+export const QOREID_BASE_URLS: Record<NormalizedQoreIDEnvironment, string> = {
+  sandbox: 'https://api.qoreid.com',
+  live: 'https://api.qoreid.com',
+};
+
+export const QOREID_BASE_URL = QOREID_BASE_URLS.sandbox;
+
+export const normalizeQoreIDEnvironment = (
+  environment?: string,
+): NormalizedQoreIDEnvironment =>
+  environment === 'live' || environment === 'production' ? 'live' : 'sandbox';
+
+export const getQoreIDBaseUrl = (
+  environment: QoreIDEnvironment,
+  baseUrlOverride?: string,
+): string =>
+  (
+    baseUrlOverride ?? QOREID_BASE_URLS[normalizeQoreIDEnvironment(environment)]
+  ).replace(/\/+$/, '');
 
 export const getQoreIDCredentials = (
   environment: QoreIDEnvironment,
-): QoreIDCredentials =>
-  environment === 'development'
+): QoreIDCredentials => {
+  const normalizedEnvironment = normalizeQoreIDEnvironment(environment);
+
+  return normalizedEnvironment === 'live'
     ? {
-        clientId: process.env.QOREID_CLIENT,
-        secret: process.env.QOREID_SECRET,
-      }
-    : {
         clientId: process.env.QOREID_LIVE_CLIENT,
         secret: process.env.QOREID_LIVE_SECRET,
+      }
+    : {
+        clientId: process.env.QOREID_CLIENT,
+        secret: process.env.QOREID_SECRET,
       };
+};
 
 export const buildQoreIDHeaders = (token?: string): Record<string, string> => ({
   Accept: 'application/json',
@@ -66,8 +91,17 @@ export const isQoreIDTokenResponse = (
 ): value is QoreIDTokenResponse =>
   typeof value === 'object' &&
   value !== null &&
-  'accessToken' in value &&
-  'expiresIn' in value;
+  (typeof (value as QoreIDTokenResponse).accessToken === 'string' ||
+    typeof (value as QoreIDTokenResponse).access_token === 'string');
+
+export const getQoreIDAccessTokenFromResponse = (
+  response: QoreIDTokenResponse,
+): string | undefined => response.accessToken ?? response.access_token;
+
+export const getQoreIDExpiresInFromResponse = (
+  response: QoreIDTokenResponse,
+): number =>
+  response.expiresIn ?? response.expires_in ?? DEFAULT_TOKEN_TTL_SECONDS;
 
 export const getQoreIDErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : 'QoreID request failed';
@@ -144,9 +178,19 @@ export const fetchQoreIDToken = async (
     );
   }
 
+  const accessToken = getQoreIDAccessTokenFromResponse(response);
+
+  if (!accessToken) {
+    throw new handleResponse(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      'Invalid response from QoreID token endpoint',
+      response,
+    );
+  }
+
   return {
-    accessToken: response.accessToken,
-    expiresAt: Date.now() + response.expiresIn * 1000,
+    accessToken,
+    expiresAt: Date.now() + getQoreIDExpiresInFromResponse(response) * 1000,
   };
 };
 
@@ -165,3 +209,8 @@ export const getValidQoreIDAccessToken = async (
 
   return refreshToken();
 };
+
+export const buildQoreIDCacEndpoint = (
+  version: QoreIDCacVersion = 'v1',
+  level: QoreIDCacLevel = 'basic',
+): string => `/${version}/ng/identities/cac-${level}`;

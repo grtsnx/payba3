@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { handleResponse } from 'src/middleware';
 import type {
+  NormalizedPaystackEnvironment,
   PaystackEnvironment,
   PaystackErrorResponse,
   PaystackRequestContext,
@@ -16,16 +17,24 @@ import type {
 
 export const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 
+export const normalizePaystackEnvironment = (
+  environment?: string,
+): NormalizedPaystackEnvironment =>
+  environment === 'live' || environment === 'production' ? 'live' : 'sandbox';
+
 export const getPaystackSecret = (
   environment: PaystackEnvironment,
 ): string | undefined =>
-  environment === 'development'
+  normalizePaystackEnvironment(environment) === 'sandbox'
     ? process.env.PAYSTACK_SECRET_KEY
     : process.env.PAYSTACK_SECRET_KEY_LIVE;
 
 export const getPaystackPreferredBank = (
   environment: PaystackEnvironment,
-): string => (environment === 'development' ? 'test-bank' : 'titan-paystack');
+): string =>
+  normalizePaystackEnvironment(environment) === 'sandbox'
+    ? 'test-bank'
+    : 'titan-paystack';
 
 export const buildPaystackHeaders = (
   secret: string,
@@ -138,11 +147,14 @@ export const getPaystackSignature = (
 export const createPaystackSignatureHash = (
   body: unknown,
   secret: string,
-): string =>
-  crypto
-    .createHmac('sha512', secret)
-    .update(JSON.stringify(body))
-    .digest('hex');
+): string => {
+  const payload =
+    typeof body === 'string' || Buffer.isBuffer(body)
+      ? body
+      : JSON.stringify(body ?? {});
+
+  return crypto.createHmac('sha512', secret).update(payload).digest('hex');
+};
 
 export const isTimingSafeEqual = (
   expectedSignature: string,

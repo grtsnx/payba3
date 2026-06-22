@@ -1,8 +1,12 @@
 export type PaystackEnvironment =
+  | 'sandbox'
+  | 'live'
   | 'development'
   | 'production'
   | 'test'
   | 'provision';
+
+export type NormalizedPaystackEnvironment = 'sandbox' | 'live';
 
 export type PaystackHttpMethod = 'GET' | 'POST' | 'DELETE';
 

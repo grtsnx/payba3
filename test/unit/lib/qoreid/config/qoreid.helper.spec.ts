@@ -1,6 +1,11 @@
 import {
+  buildQoreIDCacEndpoint,
+  getQoreIDAccessTokenFromResponse,
+  getQoreIDBaseUrl,
+  getQoreIDExpiresInFromResponse,
   getValidQoreIDAccessToken,
   isQoreIDTokenResponse,
+  QOREID_BASE_URLS,
 } from 'src/lib/qoreid/config/qoreid.helper';
 import type { QoreIDTokenCache } from 'src/lib/qoreid/config/qoreid.types';
 
@@ -9,7 +14,28 @@ describe('QoreID helpers', () => {
     expect(
       isQoreIDTokenResponse({ accessToken: 'token', expiresIn: 3600 }),
     ).toBe(true);
-    expect(isQoreIDTokenResponse({ accessToken: 'token' })).toBe(false);
+    expect(
+      isQoreIDTokenResponse({ access_token: 'token', expires_in: 3600 }),
+    ).toBe(true);
+    expect(isQoreIDTokenResponse({ expiresIn: 3600 })).toBe(false);
+  });
+
+  it('normalizes base URLs and token response shapes', () => {
+    expect(getQoreIDBaseUrl('sandbox')).toBe(QOREID_BASE_URLS.sandbox);
+    expect(getQoreIDBaseUrl('live', 'https://qoreid.example.test///')).toBe(
+      'https://qoreid.example.test',
+    );
+    expect(
+      getQoreIDAccessTokenFromResponse({ access_token: 'snake-token' }),
+    ).toBe('snake-token');
+    expect(getQoreIDExpiresInFromResponse({ accessToken: 'token' })).toBe(3000);
+  });
+
+  it('builds CAC identity endpoints by version and level', () => {
+    expect(buildQoreIDCacEndpoint()).toBe('/v1/ng/identities/cac-basic');
+    expect(buildQoreIDCacEndpoint('v3', 'premium')).toBe(
+      '/v3/ng/identities/cac-premium',
+    );
   });
 
   it('refreshes tokens before expiry', async () => {

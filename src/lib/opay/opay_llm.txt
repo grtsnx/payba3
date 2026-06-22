@@ -10,7 +10,7 @@ OPay provides comprehensive payment solutions for merchants through:
 
 Key Integration Notes:
 - All API requests must be made over HTTPS
-- Authentication uses either Public Key (Bearer token) or HMAC-SHA512 signature
+- Authentication uses Public Key bearer auth for cashier creation, HMAC-SHA512 signatures for signed API calls, and HMAC-SHA3-512 for callback verification
 - Amounts are in minor units (100 kobos = 1 NGN, 100 cents = 1 USD)
 - Sandbox environment available for testing before production
 - Webhooks provide real-time transaction status updates
@@ -644,7 +644,7 @@ Process a refund for a completed payment.
 
 Check the status of a refund transaction.
 
-**Endpoint:** `POST /api/v1/international/payment/refund/status`
+**Endpoint:** `POST /api/v1/international/payment/refund/query`
 
 **Authentication:** Signature (HMAC-SHA512)
 
@@ -749,8 +749,8 @@ OPay sends POST requests to your callback URL when transaction status changes.
 ### Verifying Webhook Signature
 
 1. Extract the `payload` object from the webhook
-2. Compute HMAC-SHA512 of the payload JSON using your Secret Key
-3. Compare with the `sha512` value in the webhook
+2. Compute HMAC-SHA3-512 of the payload JSON using your Secret Key
+3. Compare with the `sha512` value in the webhook using a timing-safe comparison
 
 ### Webhook Response
 

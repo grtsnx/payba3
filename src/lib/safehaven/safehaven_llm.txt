@@ -1,0 +1,77 @@
+# Safehaven
+
+Safehaven MFB provides Nigerian banking APIs for account creation, subaccounts, virtual accounts, transfers, and value-added services.
+
+## Environments
+
+- Sandbox API: `https://api.sandbox.safehavenmfb.com`
+- Live API: `https://api.safehavenmfb.com`
+- payba3 env switch: `SAFEHAVEN_ENVIRONMENT=sandbox|live`
+- Optional override: `SAFEHAVEN_BASE_URL`
+
+## Authentication
+
+Generate an access token with:
+
+`POST /oauth2/token`
+
+Headers:
+
+- `accept: application/json`
+- `content-type: application/json`
+
+Body:
+
+```json
+{
+  "grant_type": "client_credentials",
+  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+  "client_id": "SAFEHAVEN_CLIENT_ID",
+  "client_assertion": "SAFEHAVEN_CLIENT_ASSERTION"
+}
+```
+
+Token responses include:
+
+- `access_token`
+- `expires_in`
+- `refresh_token`
+- `client_id`
+- `ibs_client_id`
+- `ibs_user_id`
+
+Use `expires_in` to refresh before expiry. For banking/account APIs, prefer the returned `ibs_client_id` as the `ClientID` header. Fall back to the OAuth `client_id` only when the token response does not include `ibs_client_id`.
+
+## Subaccounts
+
+Create an individual subaccount with:
+
+`POST /accounts/v2/subaccount`
+
+Headers:
+
+- `authorization: Bearer {access_token}`
+- `ClientID: {ibs_client_id}`
+- `accept: application/json`
+- `content-type: application/json`
+
+Common body fields:
+
+```json
+{
+  "phoneNumber": "08000000000",
+  "identityType": "vID",
+  "identityId": "identity-id",
+  "emailAddress": "customer@example.com",
+  "externalReference": "customer_123",
+  "autoSweep": false
+}
+```
+
+Identity flows may use `identityId`, `identityNumber`, `otp`, or `callbackUrl` depending on the selected `identityType`.
+
+## payba3 Notes
+
+- Safehaven token refresh must be automatic.
+- Store token metadata, not only `access_token`, because account calls need `ibs_client_id`.
+- Never expose `SAFEHAVEN_CLIENT_ASSERTION` to browser/client code.

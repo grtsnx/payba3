@@ -78,8 +78,8 @@ export class MonoService {
     });
   }
 
-  async verifyPayment(paymentId: string): Promise<MonoResponse> {
-    return this.request(`/v2/payments/${encodeURIComponent(paymentId)}/verify`);
+  async verifyPayment(reference: string): Promise<MonoResponse> {
+    return this.request(`/v2/payments/verify/${encodeURIComponent(reference)}`);
   }
 
   async createDisbursementSourceAccount(

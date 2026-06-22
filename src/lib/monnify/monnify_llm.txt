@@ -7,7 +7,7 @@
  Important notes: 
  - API authentication requires a POST /api/v1/auth/login with Basic auth (base64 of apiKey:secretKey) to get an accessToken JWT, then using "Authorization: Bearer {accessToken}" for all requests. 
  - All monetary amounts in API requests and responses are specified in kobo (e.g., 10000 for NGN 100.00). 
- - Always verify transaction status server-side using GET /api/v2/merchant/transactions/query?transactionReference={ref}; never rely solely on client-side callbacks or webhooks for critical logic. 
+ - Always verify transaction status server-side before delivering value. Use GET /api/v2/merchant/transactions/query?paymentReference={ref} or ?transactionReference={ref}; Monnify also documents GET /api/v2/transactions/{transactionReference} for transaction-reference lookups. 
  - Validate incoming webhook requests by computing a SHA-512 HMAC of the raw request body using your merchant secret key and comparing it against the 'monnify-signature' header. 
  - Use `https://sandbox.monnify.com` for testing and `https://api.monnify.com` for live production API interactions. 
   

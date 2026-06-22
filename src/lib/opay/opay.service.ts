@@ -82,7 +82,7 @@ export class OPayService {
   }
 
   async queryRefundStatus(input: OPayStatusPayload): Promise<OPayResponse> {
-    return this.request('/api/v1/international/payment/refund/status', {
+    return this.request('/api/v1/international/payment/refund/query', {
       method: 'POST',
       authMode: 'signature',
       body: { country: 'NG', ...input },

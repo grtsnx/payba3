@@ -106,6 +106,9 @@ export const createSafehavenTokenCache = (
   response: SafehavenTokenResponse,
 ): SafehavenTokenCache => ({
   accessToken: response.access_token,
+  clientId: response.client_id,
+  ibsClientId: response.ibs_client_id,
+  ibsUserId: response.ibs_user_id,
   expiresAt: Date.now() + response.expires_in * 1000,
 });
 
@@ -118,13 +121,27 @@ export const getValidSafehavenAccessToken = async (
   token: SafehavenTokenCache | undefined,
   refreshToken: () => Promise<SafehavenTokenResponse>,
 ): Promise<string> => {
+  const tokenCache = await getValidSafehavenToken(token, refreshToken);
+
+  return tokenCache.accessToken;
+};
+
+export const getValidSafehavenToken = async (
+  token: SafehavenTokenCache | undefined,
+  refreshToken: () => Promise<SafehavenTokenResponse>,
+): Promise<SafehavenTokenCache> => {
   if (isSafehavenTokenFresh(token)) {
-    return token.accessToken;
+    return token;
   }
 
   const response = await refreshToken();
-  return response.access_token;
+  return createSafehavenTokenCache(response);
 };
+
+export const getSafehavenClientHeaderValue = (
+  token: SafehavenTokenCache,
+  fallbackClientId: string,
+): string => token.ibsClientId || fallbackClientId;
 
 export const throwSafehavenRequestError = (
   status: number,

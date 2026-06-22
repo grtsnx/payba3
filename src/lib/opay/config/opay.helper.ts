@@ -90,6 +90,25 @@ export const createOPaySignature = (body: unknown, secretKey: string): string =>
     .update(stringifyOPayPayload(body))
     .digest('hex');
 
+export const stringifyOPayCallbackPayload = (
+  body: unknown,
+): string | Buffer => {
+  if (typeof body === 'string' || Buffer.isBuffer(body)) {
+    return body;
+  }
+
+  return stringifyOPayPayload(body);
+};
+
+export const createOPayCallbackSignature = (
+  body: unknown,
+  secretKey: string,
+): string =>
+  crypto
+    .createHmac('sha3-512', secretKey)
+    .update(stringifyOPayCallbackPayload(body))
+    .digest('hex');
+
 export const buildOPayHeaders = (
   credentials: OPayCredentials,
   options: OPayRequestOptions,
@@ -189,7 +208,11 @@ export const verifyOPayCallbackSignature = (
   signature: string,
   secretKey: string,
 ): boolean => {
-  const expected = createOPaySignature(body, secretKey);
+  if (!/^[a-f0-9]+$/i.test(signature) || signature.length % 2 !== 0) {
+    return false;
+  }
+
+  const expected = createOPayCallbackSignature(body, secretKey);
   const expectedBuffer = Buffer.from(expected, 'hex');
   const receivedBuffer = Buffer.from(signature, 'hex');
 

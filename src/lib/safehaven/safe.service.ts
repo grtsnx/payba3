@@ -4,7 +4,8 @@ import {
   buildSafehavenTokenPayload,
   createSafehavenTokenCache,
   getSafehavenBaseUrl,
-  getValidSafehavenAccessToken,
+  getSafehavenClientHeaderValue,
+  getValidSafehavenToken,
   requestSafehaven,
 } from './config/safe.helper';
 import type {
@@ -66,9 +67,10 @@ export class SafehavenService {
   async createSubAccount(
     payload: CreateSafehavenSubAccountPayload,
   ): Promise<SafehavenSubAccountResponse> {
-    const accessToken = await getValidSafehavenAccessToken(this.token, () =>
+    const token = await getValidSafehavenToken(this.token, () =>
       this.getAccessToken(),
     );
+    this.token = token;
 
     return requestSafehaven<SafehavenSubAccountResponse>({
       baseUrl: this.baseUrl,
@@ -77,9 +79,9 @@ export class SafehavenService {
       isProduction: this.isProduction,
       options: {
         method: 'POST',
-        accessToken,
+        accessToken: token.accessToken,
         headers: {
-          ClientID: this.clientId,
+          ClientID: getSafehavenClientHeaderValue(token, this.clientId),
         },
         body: {
           autoSweep: false,

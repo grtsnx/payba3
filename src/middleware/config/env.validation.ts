@@ -14,6 +14,11 @@ export const envValidationSchema = Joi.object({
     .max(1000)
     .default(100),
   TRUST_PROXY_HOPS: Joi.number().integer().min(0).max(5).default(0),
+  PAYSTACK_ENVIRONMENT: Joi.string()
+    .valid('sandbox', 'live')
+    .default('sandbox'),
+  PAYSTACK_SECRET_KEY: Joi.string().optional().allow(''),
+  PAYSTACK_SECRET_KEY_LIVE: Joi.string().optional().allow(''),
   SAFEHAVEN_ENVIRONMENT: Joi.string()
     .valid('sandbox', 'live')
     .default('sandbox'),
@@ -53,4 +58,16 @@ export const envValidationSchema = Joi.object({
   MONNIFY_LIVE_API_KEY: Joi.string().optional().allow(''),
   MONNIFY_LIVE_SECRET_KEY: Joi.string().optional().allow(''),
   MONNIFY_LIVE_CONTRACT_CODE: Joi.string().optional().allow(''),
+  SEERBIT_ENVIRONMENT: Joi.string().valid('sandbox', 'live').default('sandbox'),
+  SEERBIT_BASE_URL: Joi.string().uri().optional().allow(''),
+  SEERBIT_PUBLIC_KEY: Joi.string().optional().allow(''),
+  SEERBIT_SECRET_KEY: Joi.string().optional().allow(''),
+  SEERBIT_LIVE_PUBLIC_KEY: Joi.string().optional().allow(''),
+  SEERBIT_LIVE_SECRET_KEY: Joi.string().optional().allow(''),
+  QOREID_ENVIRONMENT: Joi.string().valid('sandbox', 'live').default('sandbox'),
+  QOREID_BASE_URL: Joi.string().uri().optional().allow(''),
+  QOREID_CLIENT: Joi.string().optional().allow(''),
+  QOREID_SECRET: Joi.string().optional().allow(''),
+  QOREID_LIVE_CLIENT: Joi.string().optional().allow(''),
+  QOREID_LIVE_SECRET: Joi.string().optional().allow(''),
 });

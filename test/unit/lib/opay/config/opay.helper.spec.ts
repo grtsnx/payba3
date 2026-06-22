@@ -1,5 +1,6 @@
 import {
   buildOPayHeaders,
+  createOPayCallbackSignature,
   createOPaySignature,
   getOPayBaseUrl,
   OPAY_BASE_URLS,
@@ -31,7 +32,7 @@ describe('OPay helpers', () => {
     });
   });
 
-  it('uses stable HMAC signatures for signed requests and callbacks', () => {
+  it('uses stable HMAC-SHA512 signatures for signed requests', () => {
     const payload = {
       amount: { currency: 'NGN', total: 1000 },
       country: 'NG',
@@ -40,11 +41,36 @@ describe('OPay helpers', () => {
     const signature = createOPaySignature(payload, credentials.secretKey);
 
     expect(signature).toMatch(/^[a-f0-9]{128}$/);
-    expect(verifyOPayCallbackSignature(payload, signature, 'secret')).toBe(
-      true,
+    expect(
+      buildOPayHeaders(credentials, {
+        authMode: 'signature',
+        body: payload,
+      }).Authorization,
+    ).toBe(`Bearer ${signature}`);
+  });
+
+  it('verifies callback payloads with HMAC-SHA3-512', () => {
+    const payload = {
+      amount: { currency: 'NGN', total: 1000 },
+      country: 'NG',
+      reference: 'ref',
+    };
+    const callbackSignature = createOPayCallbackSignature(
+      payload,
+      credentials.secretKey,
     );
-    expect(verifyOPayCallbackSignature(payload, signature, 'wrong')).toBe(
-      false,
+    const requestSignature = createOPaySignature(
+      payload,
+      credentials.secretKey,
     );
+
+    expect(callbackSignature).toMatch(/^[a-f0-9]{128}$/);
+    expect(callbackSignature).not.toBe(requestSignature);
+    expect(
+      verifyOPayCallbackSignature(payload, callbackSignature, 'secret'),
+    ).toBe(true);
+    expect(
+      verifyOPayCallbackSignature(payload, requestSignature, 'secret'),
+    ).toBe(false);
   });
 });

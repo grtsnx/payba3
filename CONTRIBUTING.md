@@ -71,6 +71,7 @@ payba3/
 │   ├── app.e2e-spec.ts            # E2E smoke route test
 │   └── jest-e2e.json              # E2E Jest config
 ├── README.md                      # User-facing usage guide
+├── llms.txt                       # Agent/LLM index for provider references
 ├── SECURITY.md                    # Vulnerability reporting policy
 ├── SUPPORT.md                     # Support guidance
 ├── CODE_OF_CONDUCT.md             # Community behavior expectations
@@ -92,7 +93,7 @@ src/lib/<provider>/
 │   └── <provider>.types.ts        # Provider payloads, responses, request context
 ├── <provider>.module.ts           # Provider registration
 ├── <provider>.service.ts          # Developer-facing provider actions
-└── <provider>_llm.txt             # Optional provider docs for agents/LLMs
+└── <provider>_llm.txt             # Provider docs for agents/LLMs
 ```
 
 Tests for that provider belong in `test/unit`, not beside source files:

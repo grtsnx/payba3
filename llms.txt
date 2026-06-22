@@ -1,0 +1,22 @@
+# payba3 LLM Index
+
+payba3 is a developer-first integration surface for multiple payment and verification providers. It is designed for apps, libraries, backend services, and AI agents that need one predictable way to choose a provider and call provider-specific capabilities.
+
+## Provider References
+
+- Paystack: `src/lib/paystack/paystack_llm.txt`
+- Safehaven: `src/lib/safehaven/safehaven_llm.txt`
+- SeerBit: `src/lib/seerbit/seerbit_llm.txt`
+- OPay: `src/lib/opay/opay_llm.txt`
+- Mono: `src/lib/mono/mono_llm.txt`
+- Monnify: `src/lib/monnify/monnify_llm.txt`
+- QoreID: `src/lib/qoreid/qoreid_llm.txt`
+
+## Integration Rules
+
+- Configure only the provider you use.
+- Use provider-specific environment switches such as `SAFEHAVEN_ENVIRONMENT`, `OPAY_ENVIRONMENT`, `MONNIFY_ENVIRONMENT`, `PAYSTACK_ENVIRONMENT`, `QOREID_ENVIRONMENT`, and `SEERBIT_ENVIRONMENT`.
+- Keep secrets server-side.
+- Verify provider webhooks before trusting callback payloads.
+- Verify transaction status server-side before delivering value.
+- Refresh expiring access tokens before they expire.

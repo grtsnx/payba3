@@ -58,6 +58,11 @@ export type MonnifyInitializeTransactionInput = {
   [key: string]: unknown;
 };
 
+export type MonnifyTransactionStatusQuery = {
+  paymentReference?: string;
+  transactionReference?: string;
+};
+
 export type MonnifyReservedAccountInput = {
   accountReference: string;
   accountName: string;

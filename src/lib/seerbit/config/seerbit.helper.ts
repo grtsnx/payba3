@@ -5,12 +5,41 @@ import {
 } from '@nestjs/common';
 import { handleResponse } from 'src/middleware';
 import type {
+  SeerbitBaseUrls,
+  SeerbitCredentials,
   SeerbitEncryptedKeyResponse,
+  SeerbitEnvironment,
   SeerbitRequestContext,
   SeerbitRequestOptions,
 } from './seerbit.types';
 
-export const SEERBIT_BASE_URL = 'https://seerbitapi.com/api/v2';
+export const SEERBIT_BASE_URLS: SeerbitBaseUrls = {
+  sandbox: 'https://seerbitapi.com/api/v2',
+  live: 'https://seerbitapi.com/api/v2',
+};
+
+export const SEERBIT_BASE_URL = SEERBIT_BASE_URLS.sandbox;
+
+export const getSeerbitBaseUrl = (
+  environment: SeerbitEnvironment,
+  baseUrlOverride?: string,
+): string =>
+  (baseUrlOverride ?? SEERBIT_BASE_URLS[environment]).replace(/\/+$/, '');
+
+export const getSeerbitCredentials = (
+  environment: SeerbitEnvironment,
+): SeerbitCredentials => ({
+  publicKey:
+    (environment === 'live'
+      ? process.env.SEERBIT_LIVE_PUBLIC_KEY
+      : process.env.SEERBIT_PUBLIC_KEY
+    )?.trim() ?? '',
+  secretKey:
+    (environment === 'live'
+      ? process.env.SEERBIT_LIVE_SECRET_KEY
+      : process.env.SEERBIT_SECRET_KEY
+    )?.trim() ?? '',
+});
 
 export const buildSeerbitHeaders = (
   token?: string,
@@ -99,7 +128,9 @@ export const generateSeerbitBearerToken = async (
     },
   });
 
-  const encryptedKey = response.data?.EncryptedSecKey?.encryptedKey;
+  const encryptedKey =
+    response.data?.EncryptedSecKey?.encryptedKey ??
+    response.data?.EncrytedSecKey?.encryptedKey;
 
   if (response.status !== 'SUCCESS' || !encryptedKey) {
     throw new handleResponse(

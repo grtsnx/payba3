@@ -3,24 +3,31 @@ import { handleResponse } from 'src/middleware';
 import {
   assertSeerbitKeys,
   generateSeerbitBearerToken,
+  getSeerbitBaseUrl,
+  getSeerbitCredentials,
   requestSeerbit,
-  SEERBIT_BASE_URL,
 } from './config/seerbit.helper';
 import type {
   SeerbitCreateVirtualAccountInput,
   SeerbitCreateVirtualAccountResult,
+  SeerbitEnvironment,
 } from './config/seerbit.types';
 
 @Injectable()
 export class SeerbitService {
-  private readonly baseUrl = SEERBIT_BASE_URL;
+  private readonly baseUrl: string;
   private readonly publicKey: string;
   private readonly secretKey: string;
   private bearerToken: string | null = null;
 
   constructor() {
-    this.publicKey = process.env.SEERBIT_PUBLIC_KEY?.trim() ?? '';
-    this.secretKey = process.env.SEERBIT_SECRET_KEY?.trim() ?? '';
+    const environment = (process.env.SEERBIT_ENVIRONMENT ??
+      'sandbox') as SeerbitEnvironment;
+    const credentials = getSeerbitCredentials(environment);
+
+    this.baseUrl = getSeerbitBaseUrl(environment, process.env.SEERBIT_BASE_URL);
+    this.publicKey = credentials.publicKey;
+    this.secretKey = credentials.secretKey;
   }
 
   async getBearerToken(): Promise<string> {
@@ -50,7 +57,7 @@ export class SeerbitService {
         body: {
           publicKey: this.publicKey,
           fullName: input.fullName,
-          bankVerificationNumber: '',
+          bankVerificationNumber: input.bankVerificationNumber ?? '',
           currency: input.currency ?? 'NGN',
           country: input.country ?? 'NG',
           reference: input.reference,

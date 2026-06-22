@@ -257,7 +257,7 @@ Important notes:
 
 - [Initiate Payment](https://docs.mono.co/api/directpay/initiate): `POST /v2/payments/initiate` - Create a one-time payment with amount, reference, and customer details
 - [Redirect URLs](https://docs.mono.co/api/directpay/redirect-urls): Configure success and failure redirect URLs for payment flows
-- [Verify Payment Status](https://docs.mono.co/api/directpay/verify): `GET /v2/payments/{id}/verify` - Confirm payment status before giving value
+- [Verify Payment Status](https://docs.mono.co/api/directpay/verify): `GET /v2/payments/verify/{reference}` - Confirm payment status with the payment reference before giving value
 - [Fetch All Payments](https://docs.mono.co/api/directpay/fetch-payments): `GET` - Retrieve paginated list of all payment transactions
 
 ## Recurring Payments API (Direct Debit)

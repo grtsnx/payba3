@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import {
   assertMonnifyContractCode,
+  buildMonnifyQuery,
   fetchMonnifyToken,
   getMonnifyBaseUrl,
   getMonnifyCredentials,
   getValidMonnifyAccessToken,
   requestMonnify,
+  verifyMonnifyWebhookSignature,
 } from './config/monnify.helper';
 import type {
   MonnifyCredentials,
@@ -17,6 +19,7 @@ import type {
   MonnifyResponse,
   MonnifySubAccountInput,
   MonnifyTokenCache,
+  MonnifyTransactionStatusQuery,
   MonnifyTransferInput,
 } from './config/monnify.types';
 
@@ -64,9 +67,11 @@ export class MonnifyService {
     return this.request('/api/v1/merchant/transactions/init-transaction', {
       method: 'POST',
       body: {
-        currencyCode: 'NGN',
-        contractCode: this.credentials.contractCode,
         ...input,
+        currencyCode: input.currencyCode ?? 'NGN',
+        contractCode: assertMonnifyContractCode(
+          input.contractCode ?? this.credentials.contractCode,
+        ),
       },
     });
   }
@@ -77,9 +82,11 @@ export class MonnifyService {
     return this.request('/api/v1/merchant/bank-transfer/init-payment', {
       method: 'POST',
       body: {
-        currencyCode: 'NGN',
-        contractCode: this.credentials.contractCode,
         ...input,
+        currencyCode: input.currencyCode ?? 'NGN',
+        contractCode: assertMonnifyContractCode(
+          input.contractCode ?? this.credentials.contractCode,
+        ),
       },
     });
   }
@@ -89,6 +96,14 @@ export class MonnifyService {
   ): Promise<MonnifyResponse> {
     return this.request(
       `/api/v2/transactions/${encodeURIComponent(transactionReference)}`,
+    );
+  }
+
+  async queryTransactionStatus(
+    query: MonnifyTransactionStatusQuery,
+  ): Promise<MonnifyResponse> {
+    return this.request(
+      `/api/v2/merchant/transactions/query${buildMonnifyQuery(query)}`,
     );
   }
 
@@ -145,5 +160,13 @@ export class MonnifyService {
       method: 'POST',
       body: input,
     });
+  }
+
+  verifyWebhookSignature(body: unknown, signature: string): boolean {
+    return verifyMonnifyWebhookSignature(
+      body,
+      signature,
+      this.credentials.secretKey,
+    );
   }
 }

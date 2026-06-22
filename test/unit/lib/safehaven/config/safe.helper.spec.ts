@@ -1,7 +1,9 @@
 import {
   createSafehavenTokenCache,
+  getSafehavenClientHeaderValue,
   getSafehavenBaseUrl,
   getValidSafehavenAccessToken,
+  getValidSafehavenToken,
   SAFEHAVEN_BASE_URLS,
 } from 'src/lib/safehaven/config/safe.helper';
 import type { SafehavenTokenCache } from 'src/lib/safehaven/config/safe.types';
@@ -28,16 +30,25 @@ describe('Safehaven helpers', () => {
     });
 
     expect(cache.accessToken).toBe('token');
+    expect(cache.clientId).toBe('client');
+    expect(cache.ibsClientId).toBe('ibs-client');
+    expect(cache.ibsUserId).toBe('ibs-user');
     expect(cache.expiresAt).toBeGreaterThanOrEqual(now + 119_000);
   });
 
   it('reuses fresh access tokens and refreshes stale ones', async () => {
     const freshToken: SafehavenTokenCache = {
       accessToken: 'fresh',
+      clientId: 'client',
+      ibsClientId: 'ibs-client',
+      ibsUserId: 'ibs-user',
       expiresAt: Date.now() + 120_000,
     };
     const staleToken: SafehavenTokenCache = {
       accessToken: 'stale',
+      clientId: 'client',
+      ibsClientId: 'ibs-client',
+      ibsUserId: 'ibs-user',
       expiresAt: Date.now() + 10_000,
     };
     const refreshToken = jest.fn().mockResolvedValue({
@@ -59,5 +70,31 @@ describe('Safehaven helpers', () => {
       getValidSafehavenAccessToken(staleToken, refreshToken),
     ).resolves.toBe('new');
     expect(refreshToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns refreshed token metadata for account request headers', async () => {
+    const staleToken: SafehavenTokenCache = {
+      accessToken: 'stale',
+      clientId: 'client',
+      ibsClientId: 'old-ibs-client',
+      ibsUserId: 'old-ibs-user',
+      expiresAt: Date.now() + 10_000,
+    };
+    const refreshToken = jest.fn().mockResolvedValue({
+      access_token: 'new',
+      client_id: 'client',
+      token_type: 'Bearer',
+      expires_in: 120,
+      refresh_token: 'refresh',
+      ibs_client_id: 'new-ibs-client',
+      ibs_user_id: 'new-ibs-user',
+    });
+
+    const token = await getValidSafehavenToken(staleToken, refreshToken);
+
+    expect(token.accessToken).toBe('new');
+    expect(getSafehavenClientHeaderValue(token, 'fallback-client')).toBe(
+      'new-ibs-client',
+    );
   });
 });

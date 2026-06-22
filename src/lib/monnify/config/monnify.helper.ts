@@ -3,12 +3,14 @@ import {
   HttpStatus,
   InternalServerErrorException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { handleResponse } from 'src/middleware';
 import type {
   MonnifyAuthResponse,
   MonnifyBaseUrls,
   MonnifyCredentials,
   MonnifyEnvironment,
+  MonnifyResponse,
   MonnifyRequestContext,
   MonnifyRequestOptions,
   MonnifyTokenCache,
@@ -58,6 +60,16 @@ export const assertMonnifyCredentials = (
   }
 };
 
+export const assertMonnifySecretKey = (secretKey: string): string => {
+  if (!secretKey) {
+    throw new InternalServerErrorException(
+      'MONNIFY_SECRET_KEY is not configured',
+    );
+  }
+
+  return secretKey;
+};
+
 export const assertMonnifyContractCode = (contractCode: string): string => {
   if (!contractCode) {
     throw new InternalServerErrorException(
@@ -85,6 +97,21 @@ export const buildMonnifyRequestInit = (
   redirect: 'error',
 });
 
+export const buildMonnifyQuery = (
+  params: Record<string, string | number | boolean | undefined>,
+): string => {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      query.set(key, String(value));
+    }
+  });
+
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
 export const parseMonnifyResponse = async (
   response: Response,
 ): Promise<unknown> => {
@@ -103,6 +130,20 @@ export const parseMonnifyResponse = async (
 
 export const getMonnifyErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : 'Monnify request failed';
+
+export const isMonnifyResponse = (value: unknown): value is MonnifyResponse =>
+  typeof value === 'object' &&
+  value !== null &&
+  'requestSuccessful' in value &&
+  'responseMessage' in value;
+
+export const throwMonnifyResponseError = (body: MonnifyResponse): never => {
+  throw new handleResponse(
+    HttpStatus.BAD_REQUEST,
+    body.responseMessage || 'Monnify request failed',
+    body,
+  );
+};
 
 export const requestMonnify = async <T = unknown>({
   baseUrl,
@@ -131,6 +172,10 @@ export const requestMonnify = async <T = unknown>({
       'Monnify request failed',
       body,
     );
+  }
+
+  if (isMonnifyResponse(body) && body.requestSuccessful === false) {
+    throwMonnifyResponseError(body);
   }
 
   return body as T;
@@ -230,4 +275,44 @@ export const getValidMonnifyAccessToken = async (
   }
 
   return refreshToken();
+};
+
+export const stringifyMonnifyWebhookPayload = (
+  body: unknown,
+): string | Buffer => {
+  if (typeof body === 'string' || Buffer.isBuffer(body)) {
+    return body;
+  }
+
+  return JSON.stringify(body ?? {});
+};
+
+export const createMonnifyWebhookSignature = (
+  body: unknown,
+  secretKey: string,
+): string =>
+  crypto
+    .createHmac('sha512', assertMonnifySecretKey(secretKey))
+    .update(stringifyMonnifyWebhookPayload(body))
+    .digest('hex');
+
+export const verifyMonnifyWebhookSignature = (
+  body: unknown,
+  signature: string,
+  secretKey: string,
+): boolean => {
+  if (!/^[a-f0-9]+$/i.test(signature) || signature.length % 2 !== 0) {
+    return false;
+  }
+
+  const expected = Buffer.from(
+    createMonnifyWebhookSignature(body, secretKey),
+    'hex',
+  );
+  const received = Buffer.from(signature, 'hex');
+
+  return (
+    expected.length === received.length &&
+    crypto.timingSafeEqual(expected, received)
+  );
 };

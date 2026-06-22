@@ -134,6 +134,7 @@ Only configure the providers you use. Missing credentials for unused providers s
 ### Paystack
 
 ```bash
+PAYSTACK_ENVIRONMENT=sandbox
 PAYSTACK_SECRET_KEY=
 PAYSTACK_SECRET_KEY_LIVE=
 ```
@@ -156,8 +157,12 @@ SAFEHAVEN_ENVIRONMENT=live
 ### SeerBit
 
 ```bash
+SEERBIT_ENVIRONMENT=sandbox
+SEERBIT_BASE_URL=
 SEERBIT_PUBLIC_KEY=
 SEERBIT_SECRET_KEY=
+SEERBIT_LIVE_PUBLIC_KEY=
+SEERBIT_LIVE_SECRET_KEY=
 ```
 
 ### OPay
@@ -195,6 +200,8 @@ MONNIFY_LIVE_CONTRACT_CODE=
 ### QoreID
 
 ```bash
+QOREID_ENVIRONMENT=sandbox
+QOREID_BASE_URL=
 QOREID_CLIENT=
 QOREID_SECRET=
 QOREID_LIVE_CLIENT=
@@ -224,7 +231,8 @@ payba3.use('unknown'); // throws Unsupported payment channel
 payba3 refreshes expiring provider tokens before they become stale.
 
 - Safehaven uses `expires_in` from the token response.
-- QoreID uses `expiresIn` from the token response.
+- Safehaven stores `ibs_client_id` from the token response for account-call `ClientID` headers.
+- QoreID accepts `expiresIn` or `expires_in` from the token response.
 - Monnify derives expiry from the JWT `exp` claim when available.
 
 ## For AI Agents And Automation

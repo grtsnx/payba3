@@ -1,0 +1,68 @@
+# QoreID
+
+QoreID provides identity-verification APIs for KYC, business verification, CAC lookups, and hosted verification sessions.
+
+## Configuration
+
+- Base URL used by payba3: `https://api.qoreid.com`
+- Optional override: `QOREID_BASE_URL`
+- payba3 env switch: `QOREID_ENVIRONMENT=sandbox|live`
+- Sandbox keys: `QOREID_CLIENT`, `QOREID_SECRET`
+- Live keys: `QOREID_LIVE_CLIENT`, `QOREID_LIVE_SECRET`
+
+## Authentication
+
+QoreID API calls should be made from the backend with client credentials. payba3 obtains and caches an access token, then refreshes it before expiry.
+
+Token response shapes can vary by integration surface. Accept both:
+
+```json
+{
+  "accessToken": "token",
+  "expiresIn": 3600
+}
+```
+
+and:
+
+```json
+{
+  "access_token": "token",
+  "expires_in": 3600
+}
+```
+
+Never expose QoreID client secrets to frontend code.
+
+## Sessions
+
+Create hosted verification sessions with:
+
+`POST /v1/sessions`
+
+Use this when integrating the QoreID Web SDK or any hosted verification flow. The backend should mint the session token and pass only the safe session data to the frontend.
+
+## CAC Verification
+
+Default CAC Basic endpoint:
+
+`POST /v1/ng/identities/cac-basic`
+
+Premium variants:
+
+- `POST /v2/ng/identities/cac-premium`
+- `POST /v3/ng/identities/cac-premium`
+
+Common body:
+
+```json
+{
+  "regNumber": "RC123456"
+}
+```
+
+## payba3 Notes
+
+- `verifyCacNumber(cacNumber)` defaults to CAC Basic V1.
+- Use `verifyCacNumber(cacNumber, { version: "v3", level: "premium" })` for CAC Premium V3.
+- Use `createSession(payload)` for hosted/SDK flows.

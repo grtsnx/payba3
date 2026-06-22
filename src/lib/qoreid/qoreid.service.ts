@@ -1,27 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import {
+  buildQoreIDCacEndpoint,
   fetchQoreIDToken,
+  getQoreIDBaseUrl,
   getValidQoreIDAccessToken,
   getQoreIDCredentials,
   requestQoreID,
-  QOREID_BASE_URL,
 } from './config/qoreid.helper';
 import type {
+  QoreIDCreateSessionInput,
+  QoreIDCreateSessionResponse,
   QoreIDCredentials,
   QoreIDEnvironment,
   QoreIDTokenCache,
+  QoreIDVerifyCacOptions,
   QoreIDVerifyCacResponse,
 } from './config/qoreid.types';
 
 @Injectable()
 export class QoreIDService {
-  private readonly baseUrl = QOREID_BASE_URL;
+  private readonly baseUrl: string;
   private readonly credentials: QoreIDCredentials;
   private token?: QoreIDTokenCache;
 
   constructor() {
-    const environment = (process.env.NODE_ENV ??
-      'development') as QoreIDEnvironment;
+    const environment = (process.env.QOREID_ENVIRONMENT ??
+      process.env.NODE_ENV ??
+      'sandbox') as QoreIDEnvironment;
+    this.baseUrl = getQoreIDBaseUrl(environment, process.env.QOREID_BASE_URL);
     this.credentials = getQoreIDCredentials(environment);
   }
 
@@ -32,12 +38,33 @@ export class QoreIDService {
     return this.token.accessToken;
   }
 
-  async verifyCacNumber(cacNumber: string): Promise<QoreIDVerifyCacResponse> {
+  async createSession(
+    input: QoreIDCreateSessionInput,
+  ): Promise<QoreIDCreateSessionResponse> {
     const token = await this.getToken();
+
+    return requestQoreID<QoreIDCreateSessionResponse>({
+      baseUrl: this.baseUrl,
+      endpoint: '/v1/sessions',
+      options: {
+        method: 'POST',
+        token,
+        body: input,
+      },
+    });
+  }
+
+  async verifyCacNumber(
+    cacNumber: string,
+    options: QoreIDVerifyCacOptions = {},
+  ): Promise<QoreIDVerifyCacResponse> {
+    const token = await this.getToken();
+    const version =
+      options.version ?? (options.level === 'premium' ? 'v3' : 'v1');
 
     return requestQoreID<QoreIDVerifyCacResponse>({
       baseUrl: this.baseUrl,
-      endpoint: '/v1/ng/identities/cac-basic',
+      endpoint: buildQoreIDCacEndpoint(version, options.level),
       options: {
         method: 'POST',
         token,

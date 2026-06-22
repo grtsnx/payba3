@@ -1,7 +1,17 @@
+export type SeerbitEnvironment = 'sandbox' | 'live';
+
+export type SeerbitCredentials = {
+  publicKey: string;
+  secretKey: string;
+};
+
+export type SeerbitBaseUrls = Record<SeerbitEnvironment, string>;
+
 export type SeerbitCreateVirtualAccountInput = {
   fullName: string;
   email: string;
   reference: string;
+  bankVerificationNumber?: string;
   currency?: string;
   country?: string;
 };
@@ -26,6 +36,9 @@ export type SeerbitEncryptedKeyResponse = {
   status: string;
   data?: {
     EncryptedSecKey?: {
+      encryptedKey?: string;
+    };
+    EncrytedSecKey?: {
       encryptedKey?: string;
     };
   };

@@ -33,8 +33,9 @@ export class PaystackService {
   private readonly baseUrl = PAYSTACK_BASE_URL;
 
   constructor() {
-    const environment = (process.env.NODE_ENV ??
-      'development') as PaystackEnvironment;
+    const environment = (process.env.PAYSTACK_ENVIRONMENT ??
+      process.env.NODE_ENV ??
+      'sandbox') as PaystackEnvironment;
     const key = getPaystackSecret(environment);
     this.paystackSecret = key ?? '';
     this.preferredBank = getPaystackPreferredBank(environment);
@@ -77,11 +78,11 @@ export class PaystackService {
     });
   }
 
-  async retrieveDedicatedAccount(customerCode: string): Promise<unknown> {
+  async retrieveDedicatedAccount(dedicatedAccountId: string): Promise<unknown> {
     return requestPaystack({
       baseUrl: this.baseUrl,
       secret: this.paystackSecret,
-      endpoint: `/dedicated_account/${customerCode}`,
+      endpoint: `/dedicated_account/${encodeURIComponent(dedicatedAccountId)}`,
     });
   }
 

@@ -16,13 +16,27 @@ export type SafehavenTokenResponse = {
 
 export type SafehavenTokenCache = {
   accessToken: string;
+  clientId: string;
+  ibsClientId: string;
+  ibsUserId: string;
   expiresAt: number;
 };
 
+export type SafehavenIdentityType =
+  | 'NIN'
+  | 'vNIN'
+  | 'BVN'
+  | 'BVNUSSD'
+  | 'vID'
+  | (string & {});
+
 export type CreateSafehavenSubAccountPayload = {
   phoneNumber: string;
-  identityType: string;
-  identityId: string;
+  identityType: SafehavenIdentityType;
+  identityId?: string;
+  identityNumber?: string;
+  otp?: string;
+  callbackUrl?: string;
   emailAddress: string;
   externalReference: string;
   autoSweep?: boolean;

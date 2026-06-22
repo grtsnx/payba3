@@ -1,0 +1,61 @@
+# SeerBit
+
+SeerBit provides online payments, virtual accounts, collections, payment links, products/orders, recurring billing, and checkout APIs.
+
+## Environment
+
+- Primary API base URL: `https://seerbitapi.com/api/v2`
+- payba3 env switch: `SEERBIT_ENVIRONMENT=sandbox|live`
+- Optional override: `SEERBIT_BASE_URL`
+- Sandbox keys: `SEERBIT_PUBLIC_KEY`, `SEERBIT_SECRET_KEY`
+- Live keys: `SEERBIT_LIVE_PUBLIC_KEY`, `SEERBIT_LIVE_SECRET_KEY`
+
+## Authentication
+
+Generate the encrypted bearer token with:
+
+`POST /encrypt/keys`
+
+Body:
+
+```json
+{
+  "key": "{secretKey}.{publicKey}"
+}
+```
+
+Use the returned encrypted key as:
+
+`Authorization: Bearer {encryptedKey}`
+
+The encrypted-key response may appear as either `EncryptedSecKey` or `EncrytedSecKey`; robust integrations should support both spellings.
+
+## Virtual Accounts
+
+Create a virtual account:
+
+`POST /virtual-accounts`
+
+Body:
+
+```json
+{
+  "publicKey": "SEERBIT_PUBLIC_KEY",
+  "fullName": "Jane Doe",
+  "bankVerificationNumber": "00000000000",
+  "currency": "NGN",
+  "country": "NG",
+  "reference": "customer_123",
+  "email": "jane@example.com"
+}
+```
+
+Retrieve a virtual account:
+
+`GET /virtual-accounts/{paymentReference}`
+
+## payba3 Notes
+
+- `bankVerificationNumber` is optional in payba3 input and defaults to an empty string for sandbox-friendly flows.
+- Production/compliance flows should pass BVN when required by the merchant/provider configuration.
+- SeerBit encrypted bearer keys do not expose a standard `expires_in` field in the documented response; regenerate on process restart or when the provider rejects a cached token.
