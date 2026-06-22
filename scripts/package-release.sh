@@ -30,7 +30,7 @@ esac
 package_name="$(node -p "require('./package.json').name")"
 package_version="${input_version:-$(node -p "require('./package.json').version")}"
 package_version="${package_version#v}"
-safe_name="$(printf '%s' "$package_name" | tr '/@' '--')"
+safe_name="$(printf '%s' "$package_name" | sed 's/^@//; s#[/@]#-#g')"
 short_sha="${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo local)}"
 short_sha="${short_sha:0:12}"
 run_number="${GITHUB_RUN_NUMBER:-local}"
