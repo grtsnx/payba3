@@ -36,14 +36,7 @@ export class PaystackService {
     const environment = (process.env.NODE_ENV ??
       'development') as PaystackEnvironment;
     const key = getPaystackSecret(environment);
-
-    if (!key) {
-      throw new Error(
-        'Paystack secret key is not configured. Set PAYSTACK_SECRET_KEY or PAYSTACK_SECRET_KEY_LIVE.',
-      );
-    }
-
-    this.paystackSecret = key;
+    this.paystackSecret = key ?? '';
     this.preferredBank = getPaystackPreferredBank(environment);
   }
 

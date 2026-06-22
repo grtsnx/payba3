@@ -1,88 +1,208 @@
-# payba3 Backend
+# Payba3
 
-A rock-solid, production-ready NestJS boilerplate specifically configured for a high-performance AI website builder backend.
+Payba3 is a growing NestJS collection of payment-channel integrations. The goal is simple: developers should add their provider config, inject one Payba3 entry point, choose the provider they want, and call the provider without rebuilding the same payment plumbing every time.
 
-## Core Features
-- **Fast Package Manager**: Powered exclusively by `bun`.
-- **Advanced Logging**: Structured, high-performance logging with `nestjs-pino` and `pino-pretty` (context and PIDs ignored locally for ultimate readability).
-- **API Documentation**: Pre-configured with Swagger and Scalar API reference UI at `/reference`.
-- **Security First**: 
-  - `helmet` for HTTP security headers.
-  - `@nestjs/throttler` for rate limiting (default 60 req/min).
-  - Global `ValidationPipe` strictly validating and dropping non-whitelisted payload fields via `class-validator`.
-- **Robust Configuration**: Environment variables strictly validated on startup using `@nestjs/config` and `Joi`.
-- **Performance**: Response compression enabled (`gzip`/`deflate`).
-- **Graceful Error Handling**: Global `AllExceptionsFilter` standardizes error responses and gracefully catches internal server errors.
-- **Health Checks**: Built-in health check endpoint using `@nestjs/terminus` (mapped to `/v1/health`).
-- **CI Pipeline**: Pre-configured GitHub Actions (`ci.yml`) for automated linting, testing, building, and smoke testing.
+Current channels:
 
-## Project Setup
+- Paystack
+- Safehaven
+- Seerbit
+- OPay
+- Mono
+- Monnify
+- QoreID
+
+Payba3 is still growing, so the provider list and method coverage will expand over time.
+
+## What Payba3 Provides
+
+- One NestJS `LibModule` that registers all supported channels.
+- One `Payba3Service` facade for selecting a provider by name.
+- Provider-specific services for direct access when you need full control.
+- Typed request payloads and response wrappers per provider.
+- Isolated helpers for auth, request signing, token refresh, parsing, and error handling.
+- Sandbox/live switching from environment variables.
+- Auto-refreshing access tokens for providers that expire tokens, including Safehaven, QoreID, and Monnify.
+- Local LLM reference files beside the matching provider code.
+
+## Quick Start
+
+Install dependencies:
 
 ```bash
-# Install dependencies using bun ONLY
-$ bun install
+bun install
 ```
 
-## Running the Application
+Run the app:
 
 ```bash
-# development
-$ bun run start
-
-# watch mode
-$ bun run start:dev
-
-# production mode
-$ bun run start:prod
+bun run start:dev
 ```
 
-## Environment Variables
+Health check:
 
-Copy the `.env.sample` to `.env` and adjust the values. The server strictly validates environment schemas via `src/config/env.validation.ts` and will securely fail to start if variables are missing or incorrectly typed.
+```bash
+curl http://localhost:3000/v1/health
+```
 
-Security-sensitive defaults:
+## Using One Entry Point
 
-- `CORS_ORIGINS` is empty by default, so browsers from other origins are denied unless explicitly allowlisted.
-- `ENABLE_API_DOCS` is enabled outside production and disabled in production unless explicitly set.
-- `REQUEST_BODY_LIMIT`, `URLENCODED_PARAMETER_LIMIT`, and `TRUST_PROXY_HOPS` control request parsing and proxy trust.
-- `SAFEHAVEN_CLIENT_ID` and `SAFEHAVEN_CLIENT_ASSERTION` are required when `NODE_ENV=production`.
+Import `LibModule` in your Nest module, then inject `Payba3Service`.
 
-Safehaven defaults to sandbox. To switch to live, set:
+```ts
+import { Injectable } from '@nestjs/common';
+import { Payba3Service } from 'src/lib/payba3.service';
+
+@Injectable()
+export class CheckoutService {
+  constructor(private readonly payba3: Payba3Service) {}
+
+  async checkout(email: string, amountInKobo: number) {
+    const paystack = this.payba3.use('paystack');
+
+    return paystack.initializeOneTimeCheckout({
+      email,
+      amountInKobo,
+      currency: 'NGN',
+    });
+  }
+}
+```
+
+You can also inject a provider service directly, for example `SafehavenService`, `OPayService`, or `MonnifyService`.
+
+## Provider Config
+
+Only configure the providers you plan to use. Payba3 does not crash the app at startup when an unused provider is missing credentials; it validates credentials when that provider is called.
+
+### Safehaven
+
+```bash
+SAFEHAVEN_ENVIRONMENT=sandbox
+SAFEHAVEN_CLIENT_ID=
+SAFEHAVEN_CLIENT_ASSERTION=
+SAFEHAVEN_TIMEOUT_MS=10000
+```
+
+Switch to live:
 
 ```bash
 SAFEHAVEN_ENVIRONMENT=live
-SAFEHAVEN_CLIENT_ID=your_client_id
-SAFEHAVEN_CLIENT_ASSERTION=your_jwt_client_assertion
 ```
 
-## Testing
+### Paystack
 
 ```bash
-# unit tests
-$ bun run test
-
-# e2e tests
-$ bun run test:e2e
-
-# test coverage
-$ bun run test:cov
+PAYSTACK_SECRET_KEY=
+PAYSTACK_SECRET_KEY_LIVE=
 ```
+
+### Seerbit
+
+```bash
+SEERBIT_PUBLIC_KEY=
+SEERBIT_SECRET_KEY=
+```
+
+### OPay
+
+```bash
+OPAY_ENVIRONMENT=sandbox
+OPAY_MERCHANT_ID=
+OPAY_PUBLIC_KEY=
+OPAY_SECRET_KEY=
+OPAY_LIVE_MERCHANT_ID=
+OPAY_LIVE_PUBLIC_KEY=
+OPAY_LIVE_SECRET_KEY=
+```
+
+### Mono
+
+```bash
+MONO_ENVIRONMENT=sandbox
+MONO_SECRET_KEY=
+MONO_LIVE_SECRET_KEY=
+```
+
+### Monnify
+
+```bash
+MONNIFY_ENVIRONMENT=sandbox
+MONNIFY_API_KEY=
+MONNIFY_SECRET_KEY=
+MONNIFY_CONTRACT_CODE=
+MONNIFY_LIVE_API_KEY=
+MONNIFY_LIVE_SECRET_KEY=
+MONNIFY_LIVE_CONTRACT_CODE=
+```
+
+### QoreID
+
+```bash
+QOREID_CLIENT=
+QOREID_SECRET=
+QOREID_LIVE_CLIENT=
+QOREID_LIVE_SECRET=
+```
+
+## API Docs
+
+Scalar and Swagger are available outside production:
+
+- Scalar: `/reference`
+- Swagger: `/docs`
+- OpenAPI JSON: `/docs-json`
+
+In production, docs are disabled unless `ENABLE_API_DOCS=true`.
+
+## Security Defaults
+
+- Helmet security headers with a docs-aware CSP.
+- Strict body-size and URL-encoded parameter limits.
+- CORS allowlist via `CORS_ORIGINS`.
+- Global validation pipe with whitelisting and non-whitelisted-field rejection.
+- Pino redaction for auth headers, tokens, cookies, and client assertions.
+- Provider secrets are read from env and are not hardcoded in source.
+- Token-bearing providers refresh before expiry instead of reusing stale tokens.
+
+## Tests And CI Readiness
+
+Run the same checks locally:
+
+```bash
+bun install --frozen-lockfile
+bun run lint
+bun run test
+bun run test:e2e
+bun run build
+bun audit
+```
+
+Current test coverage includes:
+
+- Payba3 provider facade selection.
+- Safehaven token cache and proactive refresh behavior.
+- QoreID token refresh behavior.
+- Monnify JWT expiry parsing and refresh behavior.
+- OPay public-key auth, signed auth, and callback signature verification.
+- Mono request headers and query helpers.
+- Paystack startup readiness without eager credential failure.
+- Basic app e2e route health.
+
+## LLM Reference Files
+
+Provider reference docs are stored beside their channel implementation:
+
+- `src/lib/paystack/paystack_llm.txt`
+- `src/lib/opay/opay_llm.txt`
+- `src/lib/mono/mono_llm.txt`
+- `src/lib/monnify/monnify_llm.txt`
 
 ## Release Packaging
 
 Release packages are automated with GitHub Actions in `release.yml`.
 
-- Run **Release Package** manually and choose `development`, `staging`, or `production`.
-- Push a `v*` tag to create a production package from that tag.
-- Local packaging is available after a build:
-
 ```bash
-$ bun run build
-$ bun run package:release staging 0.0.1
+bun run build
+bun run package:release staging 0.0.1
 ```
-
-The release environment controls the package label and GitHub release type:
-
-- `development`: prerelease, `dev` dist tag metadata, `v<version>-dev.<sha>`
-- `staging`: prerelease, `next` dist tag metadata, `v<version>-staging.<run>`
-- `production`: full release, `latest` dist tag metadata, `v<version>`
