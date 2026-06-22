@@ -1,16 +1,17 @@
-<svg width="720" height="220" viewBox="0 0 720 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+<svg width="760" height="220" viewBox="0 0 760 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Payba3 logo</title>
-  <desc id="desc">A minimalist Payba3 wordmark with three payment channels converging into a single mark.</desc>
-  <rect width="720" height="220" rx="36" fill="#F8FAFC"/>
-  <g transform="translate(56 42)">
-    <rect x="0" y="0" width="136" height="136" rx="30" fill="#0F172A"/>
-    <path d="M36 42H78C94.5685 42 108 55.4315 108 72C108 88.5685 94.5685 102 78 102H60V122H36V42Z" fill="#F8FAFC"/>
-    <path d="M60 64H76C80.4183 64 84 67.5817 84 72C84 76.4183 80.4183 80 76 80H60V64Z" fill="#22C55E"/>
-    <path d="M104 42H124L102 122H82L104 42Z" fill="#22C55E"/>
-    <circle cx="108" cy="44" r="6" fill="#38BDF8"/>
-    <circle cx="96" cy="84" r="6" fill="#38BDF8"/>
-    <circle cx="84" cy="124" r="6" fill="#38BDF8"/>
+  <desc id="desc">A minimalist Payba3 wordmark with three payment rails merging into one channel.</desc>
+  <rect width="760" height="220" rx="28" fill="#FFFFFF"/>
+  <g transform="translate(54 46)">
+    <path d="M18 28C18 12.536 30.536 0 46 0H130C145.464 0 158 12.536 158 28V112C158 127.464 145.464 140 130 140H46C30.536 140 18 127.464 18 112V28Z" fill="#111827"/>
+    <path d="M58 42H100" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round"/>
+    <path d="M58 70H118" stroke="#A78BFA" stroke-width="14" stroke-linecap="round"/>
+    <path d="M58 98H92" stroke="#F59E0B" stroke-width="14" stroke-linecap="round"/>
+    <path d="M136 42L168 70L136 98" stroke="#06B6D4" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="38" cy="42" r="7" fill="#FFFFFF"/>
+    <circle cx="38" cy="70" r="7" fill="#A78BFA"/>
+    <circle cx="38" cy="98" r="7" fill="#F59E0B"/>
   </g>
-  <text x="226" y="127" fill="#0F172A" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="76" font-weight="800" letter-spacing="0">payba3</text>
-  <text x="230" y="160" fill="#475569" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="500" letter-spacing="0">one surface, many payment channels</text>
+  <text x="258" y="124" fill="#111827" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="78" font-weight="850" letter-spacing="0">payba3</text>
+  <text x="262" y="160" fill="#4B5563" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="500" letter-spacing="0">plug in any payment rail</text>
 </svg>

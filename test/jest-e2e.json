@@ -5,6 +5,8 @@
   },
   "rootDir": ".",
   "testEnvironment": "node",
+  "testPathIgnorePatterns": ["/node_modules/", "/dist/", "/coverage/", "/\\.release/"],
+  "modulePathIgnorePatterns": ["<rootDir>/../dist", "<rootDir>/../coverage", "<rootDir>/../.release"],
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"

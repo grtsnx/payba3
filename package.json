@@ -104,6 +104,17 @@
     },
     "rootDir": ".",
     "testRegex": "test/.*\\.spec\\.ts$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/",
+      "/coverage/",
+      "/\\.release/"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/dist",
+      "<rootDir>/coverage",
+      "<rootDir>/.release"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },

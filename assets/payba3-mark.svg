@@ -1,11 +1,12 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Payba3 mark</title>
-  <desc id="desc">Three payment channels converging into a single Payba3 mark.</desc>
-  <rect width="256" height="256" rx="56" fill="#0F172A"/>
-  <path d="M68 72H144C174.928 72 200 97.0721 200 128C200 158.928 174.928 184 144 184H112V222H68V72Z" fill="#F8FAFC"/>
-  <path d="M112 112H140C148.837 112 156 119.163 156 128C156 136.837 148.837 144 140 144H112V112Z" fill="#22C55E"/>
-  <path d="M192 72H224L184 222H152L192 72Z" fill="#22C55E"/>
-  <circle cx="196" cy="74" r="10" fill="#38BDF8"/>
-  <circle cx="174" cy="148" r="10" fill="#38BDF8"/>
-  <circle cx="152" cy="222" r="10" fill="#38BDF8"/>
+  <desc id="desc">Three payment rails merging into one channel.</desc>
+  <rect width="256" height="256" rx="48" fill="#111827"/>
+  <path d="M72 76H126" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round"/>
+  <path d="M72 128H154" stroke="#A78BFA" stroke-width="20" stroke-linecap="round"/>
+  <path d="M72 180H116" stroke="#F59E0B" stroke-width="20" stroke-linecap="round"/>
+  <path d="M178 76L218 128L178 180" stroke="#06B6D4" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="42" cy="76" r="11" fill="#FFFFFF"/>
+  <circle cx="42" cy="128" r="11" fill="#A78BFA"/>
+  <circle cx="42" cy="180" r="11" fill="#F59E0B"/>
 </svg>
