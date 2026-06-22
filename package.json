@@ -75,8 +75,11 @@
   "scripts": {
     "build": "nest build",
     "docs:broken-links": "npx mint broken-links",
+    "docs:broken-links:docs": "cd docs && npx mint broken-links",
     "docs:dev": "npx mint dev",
+    "docs:dev:docs": "cd docs && npx mint dev",
     "docs:validate": "npx mint validate",
+    "docs:validate:docs": "cd docs && npx mint validate",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

@@ -53,6 +53,7 @@ payba3/
 │   ├── payba3-logo.svg            # Full README/project logo
 │   └── payba3-mark.svg            # Compact icon/mark
 ├── docs/
+│   ├── assets/                    # Docs-local assets for Mintlify /docs root
 │   ├── agents/                    # AI agent, IDE, and tool-server guides
 │   ├── concepts/                  # Core concepts such as channels, errors, tokens
 │   ├── examples/                  # Framework and runtime usage examples
@@ -62,6 +63,7 @@ payba3/
 │   ├── reference/                 # Env vars, exports, and method references
 │   ├── security/                  # Security guidance for app and agent usage
 │   ├── configuration.mdx          # Configuration guide
+│   ├── docs.json                  # Mintlify config when project directory is /docs
 │   ├── installation.mdx           # Installation guide
 │   ├── introduction.mdx           # Docs homepage
 │   └── quickstart.mdx             # First integration path
@@ -93,6 +95,7 @@ payba3/
 ├── llms.txt                       # Agent/LLM index for provider references
 ├── SECURITY.md                    # Vulnerability reporting policy
 ├── SUPPORT.md                     # Support guidance
+├── ASSISTANT.md                   # Root docs assistant instructions
 ├── CODE_OF_CONDUCT.md             # Community behavior expectations
 ├── CHANGELOG.md                   # Human-readable change log
 ├── CONTRIBUTING.md                # This contributor guide
@@ -148,6 +151,7 @@ When adding or expanding a provider:
 
 - Add developer-facing usage docs to `docs/`.
 - Update `docs.json` whenever you add, remove, or move an MDX page.
+- Update `docs/docs.json` too so Mintlify deployments configured with `/docs` as the project directory continue to work.
 - Keep provider pages aligned with the implementation and provider LLM files.
 - Put AI-agent guidance under `docs/agents/`.
 - Keep security guidance practical and action-oriented.

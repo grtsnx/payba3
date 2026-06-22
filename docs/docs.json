@@ -1,0 +1,92 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "payba3",
+  "description": "Framework-neutral payment integration docs for developers, AI agents, IDEs, and tool servers.",
+  "colors": {
+    "primary": "#111827",
+    "light": "#06B6D4",
+    "dark": "#A78BFA"
+  },
+  "logo": {
+    "light": "/assets/payba3-logo.svg",
+    "dark": "/assets/payba3-logo.svg"
+  },
+  "favicon": "/assets/payba3-logo.svg",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Start",
+        "pages": ["introduction", "quickstart", "installation", "configuration"]
+      },
+      {
+        "group": "Core concepts",
+        "pages": [
+          "concepts/client",
+          "concepts/channels",
+          "concepts/errors",
+          "concepts/token-refresh",
+          "concepts/live-mode"
+        ]
+      },
+      {
+        "group": "Providers",
+        "pages": [
+          "providers/paystack",
+          "providers/safehaven",
+          "providers/seerbit",
+          "providers/opay",
+          "providers/mono",
+          "providers/monnify",
+          "providers/qoreid"
+        ]
+      },
+      {
+        "group": "Agents and IDEs",
+        "pages": [
+          "agents/overview",
+          "agents/llm-docs",
+          "agents/ide-integration",
+          "agents/mcp-tool-servers",
+          "agents/tool-safety"
+        ]
+      },
+      {
+        "group": "Examples",
+        "pages": [
+          "examples/node",
+          "examples/express",
+          "examples/nextjs",
+          "examples/nestjs",
+          "examples/cloudflare-workers"
+        ]
+      },
+      {
+        "group": "Security",
+        "pages": [
+          "security/overview",
+          "security/secrets",
+          "security/webhooks",
+          "security/agent-safety"
+        ]
+      },
+      {
+        "group": "Operations",
+        "pages": [
+          "operations/testing",
+          "operations/ci",
+          "operations/releasing",
+          "migration/v1-to-v2"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/environment-variables",
+          "reference/package-exports",
+          "reference/provider-methods"
+        ]
+      }
+    ]
+  }
+}

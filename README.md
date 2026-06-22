@@ -39,11 +39,21 @@ payba3 is growing. More providers, methods, adapters, and examples will be added
 ## Documentation
 
 Detailed Mintlify documentation lives in `docs/` with the site map in `docs.json`.
+The repository supports both Mintlify project-directory layouts:
+
+- repository root: `docs.json`
+- docs subdirectory: `docs/docs.json`
 
 Preview locally:
 
 ```bash
 bun run docs:dev
+```
+
+Preview the `/docs` project-directory setup:
+
+```bash
+bun run docs:dev:docs
 ```
 
 Use a Mintlify-supported LTS Node runtime for docs commands. Node 26 is not supported by the Mintlify CLI at the moment.

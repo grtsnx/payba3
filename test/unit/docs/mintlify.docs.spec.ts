@@ -69,9 +69,9 @@ const toMintlifyPagePath = (absolutePath: string): string =>
     .replace(/\\/g, '/')
     .replace(/\.mdx$/, '');
 
-const expectLocalAsset = (path?: string): void => {
+const expectLocalAsset = (path?: string, baseDir = rootDir): void => {
   expect(path).toBeDefined();
-  expect(existsSync(join(rootDir, path?.replace(/^\//, '') ?? ''))).toBe(true);
+  expect(existsSync(join(baseDir, path?.replace(/^\//, '') ?? ''))).toBe(true);
 };
 
 describe('Mintlify documentation', () => {
@@ -87,6 +87,31 @@ describe('Mintlify documentation', () => {
     expectLocalAsset(docsJson.logo?.light);
     expectLocalAsset(docsJson.logo?.dark);
     expectLocalAsset(docsJson.favicon);
+  });
+
+  it('supports both repo-root and docs-directory Mintlify project roots', () => {
+    const rootDocsJson = readJson<MintlifyDocsJson>('docs.json');
+    const docsDirectoryJson = readJson<MintlifyDocsJson>('docs/docs.json');
+    const rootNavPages = collectNavigationPages(
+      rootDocsJson.navigation.groups.flatMap((group) => group.pages),
+    ).sort();
+    const docsDirectoryPages = collectNavigationPages(
+      docsDirectoryJson.navigation.groups.flatMap((group) => group.pages),
+    ).sort();
+
+    expect(rootDocsJson.name).toBe(docsDirectoryJson.name);
+    expect(rootDocsJson.theme).toBe(docsDirectoryJson.theme);
+    expect(rootNavPages.map((page) => page.replace(/^docs\//, ''))).toEqual(
+      docsDirectoryPages,
+    );
+
+    for (const page of docsDirectoryPages) {
+      expect(existsSync(join(rootDir, 'docs', `${page}.mdx`))).toBe(true);
+    }
+
+    expectLocalAsset(docsDirectoryJson.logo?.light, join(rootDir, 'docs'));
+    expectLocalAsset(docsDirectoryJson.logo?.dark, join(rootDir, 'docs'));
+    expectLocalAsset(docsDirectoryJson.favicon, join(rootDir, 'docs'));
   });
 
   it('keeps every Mintlify navigation page backed by an MDX file', () => {
