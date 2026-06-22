@@ -35,9 +35,10 @@ if (!existsSync(path.join(rootDir, 'dist/index.js'))) {
   run('npm', ['run', 'build']);
 }
 
+const tempDir = mkdtempSync(path.join(tmpdir(), `payba3-${installer}-smoke-`));
 const packOutput = execFileSync(
   'npm',
-  ['pack', '--json', '--ignore-scripts'],
+  ['pack', '--json', '--ignore-scripts', '--pack-destination', tempDir],
   {
     cwd: rootDir,
     encoding: 'utf8',
@@ -45,8 +46,7 @@ const packOutput = execFileSync(
   },
 );
 const [{ filename }] = JSON.parse(packOutput);
-const tarballPath = path.join(rootDir, filename);
-const tempDir = mkdtempSync(path.join(tmpdir(), `payba3-${installer}-smoke-`));
+const tarballPath = path.join(tempDir, filename);
 const peerPackages = [
   '@nestjs/common@^11.0.1',
   '@nestjs/config@^4.0.4',
@@ -56,6 +56,7 @@ const peerPackages = [
 ];
 
 const smokeSource = `
+const { readFileSync } = require('node:fs');
 const pkg = require('${packageName}');
 const required = [
   'LibModule',
@@ -72,6 +73,23 @@ if (missing.length > 0) {
 for (const channel of ['paystack', 'safehaven', 'seerbit', 'opay', 'mono', 'monnify', 'qoreid']) {
   if (!pkg.PAYBA3_CHANNELS.includes(channel)) {
     throw new Error('Missing channel: ' + channel);
+  }
+}
+const llmDocs = [
+  '${packageName}/llms.txt',
+  '${packageName}/llms/paystack.txt',
+  '${packageName}/llms/safehaven.txt',
+  '${packageName}/llms/seerbit.txt',
+  '${packageName}/llms/opay.txt',
+  '${packageName}/llms/mono.txt',
+  '${packageName}/llms/monnify.txt',
+  '${packageName}/llms/qoreid.txt'
+];
+for (const doc of llmDocs) {
+  const resolved = require.resolve(doc);
+  const contents = readFileSync(resolved, 'utf8');
+  if (!contents.trim()) {
+    throw new Error('Empty LLM doc: ' + doc);
   }
 }
 console.log('${packageName} import smoke passed:', pkg.PAYBA3_CHANNELS.join(', '));

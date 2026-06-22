@@ -1,6 +1,6 @@
 {
   "name": "@grtsnx/payba3",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "One payment integration surface for many payment channels.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +11,13 @@
       "default": "./dist/index.js"
     },
     "./llms.txt": "./llms.txt",
+    "./llms/paystack.txt": "./src/lib/paystack/paystack_llm.txt",
+    "./llms/safehaven.txt": "./src/lib/safehaven/safehaven_llm.txt",
+    "./llms/seerbit.txt": "./src/lib/seerbit/seerbit_llm.txt",
+    "./llms/opay.txt": "./src/lib/opay/opay_llm.txt",
+    "./llms/mono.txt": "./src/lib/mono/mono_llm.txt",
+    "./llms/monnify.txt": "./src/lib/monnify/monnify_llm.txt",
+    "./llms/qoreid.txt": "./src/lib/qoreid/qoreid_llm.txt",
     "./package.json": "./package.json"
   },
   "files": [

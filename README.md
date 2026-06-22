@@ -80,11 +80,17 @@ bun add @grtsnx/payba3
 
 payba3 ships compiled JavaScript, TypeScript declarations, and an npm exports map. It is tested with npm and Bun install smoke checks in CI. Yarn and pnpm can consume the same npm package metadata.
 
-payba3 declares the core Nest packages as peer dependencies so your application keeps one Nest runtime. If your package manager does not auto-install peer dependencies, install these alongside payba3:
+### Runtime Requirements
+
+payba3 is Nest-native today. The core Nest runtime packages are peer dependencies so Nest applications do not end up with duplicate Nest runtimes.
+
+Most modern package managers install peer dependencies automatically or show a clear peer warning. Existing Nest apps usually already have these packages. Only install them manually if your package manager asks for them:
 
 ```bash
 npm install @nestjs/common @nestjs/core @nestjs/config reflect-metadata rxjs
 ```
+
+If you want payba3 without Nest at all, that should be a separate framework-neutral package layer, for example `@grtsnx/payba3-core`, with this package acting as the Nest adapter. Keeping the current package Nest-native is intentional for `1.x`.
 
 If you are using the repository directly:
 
@@ -245,12 +251,93 @@ payba3 refreshes expiring provider tokens before they become stale.
 
 ## For AI Agents And Automation
 
-payba3 is intended to be easy for agents and automation workflows to reason about:
+payba3 is intended to be easy for agents, IDE assistants, code generators, and automation workflows to reason about:
 
 - Provider names are explicit.
 - Configuration is environment based.
 - Request signing and token refresh are handled by payba3.
 - Provider-specific actions remain discoverable through named channels.
+
+### Agent Documentation Files
+
+The npm package includes an LLM index and provider-specific reference files. Agents and IDEs can read these files from an installed package instead of scraping source code.
+
+```ts
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+
+const indexPath = require.resolve('@grtsnx/payba3/llms.txt');
+const paystackPath = require.resolve('@grtsnx/payba3/llms/paystack.txt');
+
+const payba3Guide = readFileSync(indexPath, 'utf8');
+const paystackGuide = readFileSync(paystackPath, 'utf8');
+```
+
+Available provider docs:
+
+```text
+@grtsnx/payba3/llms.txt
+@grtsnx/payba3/llms/paystack.txt
+@grtsnx/payba3/llms/safehaven.txt
+@grtsnx/payba3/llms/seerbit.txt
+@grtsnx/payba3/llms/opay.txt
+@grtsnx/payba3/llms/mono.txt
+@grtsnx/payba3/llms/monnify.txt
+@grtsnx/payba3/llms/qoreid.txt
+```
+
+### IDE And Agent Workflow
+
+For IDEs, coding agents, and internal app generators:
+
+1. Install `@grtsnx/payba3`.
+2. Read `@grtsnx/payba3/llms.txt`.
+3. Read the provider file for the requested channel.
+4. Generate server-side code that imports from `@grtsnx/payba3`.
+5. Ask the developer for only the provider environment variables they need.
+6. Keep secrets on the server and verify provider callbacks before delivering value.
+
+Example prompt for an IDE agent:
+
+```text
+Use @grtsnx/payba3 to add Paystack checkout.
+Read @grtsnx/payba3/llms.txt and @grtsnx/payba3/llms/paystack.txt first.
+Only add server-side code.
+Use PAYSTACK_SECRET_KEY from the environment.
+Verify transactions server-side before marking an order paid.
+```
+
+For AI tool servers, expose small provider actions instead of exposing raw secrets:
+
+```ts
+import { Payba3Service, type Payba3ChannelName } from '@grtsnx/payba3';
+
+type PaymentToolInput = {
+  channel: Payba3ChannelName;
+  action: 'initializeCheckout' | 'verifyTransaction';
+  payload: Record<string, unknown>;
+};
+
+export class PaymentTool {
+  constructor(private readonly payba3: Payba3Service) {}
+
+  async run(input: PaymentToolInput) {
+    const provider = this.payba3.use(input.channel);
+
+    if (input.channel === 'paystack' && input.action === 'initializeCheckout') {
+      return provider.initializeOneTimeCheckout({
+        email: String(input.payload.email),
+        amountInKobo: Number(input.payload.amountInKobo),
+        reference: String(input.payload.reference),
+      });
+    }
+
+    throw new Error('Unsupported payment tool action');
+  }
+}
+```
 
 ## Contributor Checks
 
