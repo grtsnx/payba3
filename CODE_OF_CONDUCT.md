@@ -1,6 +1,6 @@
 # Code Of Conduct
 
-Payba3 follows a simple standard: be respectful, direct, and useful.
+payba3 follows a simple standard: be respectful, direct, and useful.
 
 ## Expected Behavior
 

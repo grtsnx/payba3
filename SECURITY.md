@@ -1,6 +1,6 @@
 # Security Policy
 
-Payba3 deals with payment and identity provider integrations, so security reports are taken seriously.
+payba3 deals with payment and identity provider integrations, so security reports are taken seriously.
 
 ## Reporting A Vulnerability
 

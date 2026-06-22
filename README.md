@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/payba3-logo.svg" alt="Payba3" width="220" />
+  <img src="./assets/payba3-logo.svg" alt="payba3" width="220" />
 </p>
 
 <p align="center">
@@ -16,11 +16,11 @@
   <a href="./SUPPORT.md">Support</a>
 </p>
 
-# Payba3
+# payba3
 
-Payba3 is an open-source collection of payment-channel integrations built for developers, teams, codebases, automations, and AI agents that need a simple way to plug into different payment providers.
+payba3 is an open-source collection of payment-channel integrations built for developers, teams, codebases, automations, and AI agents that need a simple way to plug into different payment providers.
 
-Configure the provider you want, select it through Payba3, and call the channel.
+Configure the provider you want, select it through payba3, and call the channel.
 
 ```ts
 const paystack = payba3.use('paystack');
@@ -32,15 +32,15 @@ await paystack.initializeOneTimeCheckout({
 });
 ```
 
-Payba3 is growing. More providers, methods, adapters, and examples will be added over time.
+payba3 is growing. More providers, methods, adapters, and examples will be added over time.
 
 ## About
 
 Modern products rarely stay tied to one payment provider forever. A team may start with one checkout provider, add virtual accounts later, route a payout through another provider, run identity checks with a verification API, and still need a clean way for application code, scripts, background jobs, and AI agents to call those channels without learning every provider from scratch.
 
-Payba3 is a developer-friendly payment integration layer for that reality. It gives each provider a named channel, keeps provider credentials in configuration, and exposes direct methods for common actions such as checkout, virtual accounts, transfers, subaccounts, account linking, and identity checks.
+payba3 is a developer-friendly payment integration layer for that reality. It gives each provider a named channel, keeps provider credentials in configuration, and exposes direct methods for common actions such as checkout, virtual accounts, transfers, subaccounts, account linking, and identity checks.
 
-Use Payba3 when you want:
+Use payba3 when you want:
 
 - One dependency for multiple payment and verification providers.
 - A simple provider selector: `payba3.use('provider')`.
@@ -86,7 +86,7 @@ bun install
 
 ## Quick Usage
 
-Register Payba3 in your application, then use `Payba3Service` to select a channel.
+Register payba3 in your application, then use `Payba3Service` to select a channel.
 
 ```ts
 import { Payba3Service } from 'payba3';
@@ -221,7 +221,7 @@ payba3.use('unknown'); // throws Unsupported payment channel
 
 ## Token Handling
 
-Payba3 refreshes expiring provider tokens before they become stale.
+payba3 refreshes expiring provider tokens before they become stale.
 
 - Safehaven uses `expires_in` from the token response.
 - QoreID uses `expiresIn` from the token response.
@@ -229,11 +229,11 @@ Payba3 refreshes expiring provider tokens before they become stale.
 
 ## For AI Agents And Automation
 
-Payba3 is intended to be easy for agents and automation workflows to reason about:
+payba3 is intended to be easy for agents and automation workflows to reason about:
 
 - Provider names are explicit.
 - Configuration is environment based.
-- Request signing and token refresh are handled by Payba3.
+- Request signing and token refresh are handled by payba3.
 - Provider-specific actions remain discoverable through named channels.
 
 ## Contributor Checks
@@ -249,7 +249,7 @@ bun audit
 
 ## Contributing
 
-Payba3 welcomes provider additions, method coverage, docs, tests, examples, and security hardening.
+payba3 welcomes provider additions, method coverage, docs, tests, examples, and security hardening.
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
 

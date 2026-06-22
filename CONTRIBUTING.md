@@ -1,6 +1,6 @@
-# Contributing To Payba3
+# Contributing To payba3
 
-Thanks for helping improve Payba3. This project is for developers who want one clean payment integration surface across many providers.
+Thanks for helping improve payba3. This project is for developers who want one clean payment integration surface across many providers.
 
 ## Ways To Contribute
 
@@ -34,7 +34,7 @@ bun audit
 
 ## Project Layout
 
-Payba3 keeps source code, tests, documentation, and provider reference material separated so contributors can find the right place quickly.
+payba3 keeps source code, tests, documentation, and provider reference material separated so contributors can find the right place quickly.
 
 ```text
 payba3/
@@ -52,9 +52,9 @@ payba3/
 │   └── package-release.sh         # Release archive builder
 ├── src/
 │   ├── app/                       # Minimal app shell and health endpoint
-│   ├── lib/                       # Payba3 provider integrations
+│   ├── lib/                       # payba3 provider integrations
 │   │   ├── payba3.service.ts      # One entry point for selecting a provider
-│   │   ├── payba3.types.ts        # Shared Payba3 channel types
+│   │   ├── payba3.types.ts        # Shared payba3 channel types
 │   │   ├── lib.module.ts          # Provider registration module
 │   │   ├── paystack/              # Paystack channel
 │   │   ├── safehaven/             # Safehaven channel

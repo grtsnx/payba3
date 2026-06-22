@@ -1,6 +1,6 @@
 <svg width="760" height="220" viewBox="0 0 760 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Payba3 logo</title>
-  <desc id="desc">A minimalist Payba3 wordmark with three payment rails merging into one channel.</desc>
+  <title id="title">payba3 logo</title>
+  <desc id="desc">A minimalist payba3 wordmark with three payment rails merging into one channel.</desc>
   <rect width="760" height="220" rx="28" fill="#FFFFFF"/>
   <g transform="translate(54 46)">
     <path d="M18 28C18 12.536 30.536 0 46 0H130C145.464 0 158 12.536 158 28V112C158 127.464 145.464 140 130 140H46C30.536 140 18 127.464 18 112V28Z" fill="#111827"/>

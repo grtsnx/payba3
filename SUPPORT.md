@@ -23,5 +23,5 @@ Do not open a public issue. Read [SECURITY.md](./SECURITY.md).
 
 ## Provider Account Issues
 
-Payba3 cannot approve merchant accounts, unlock dashboards, or issue provider credentials. Contact the payment provider directly for account approval, live keys, settlement, compliance, or dashboard access.
+payba3 cannot approve merchant accounts, unlock dashboards, or issue provider credentials. Contact the payment provider directly for account approval, live keys, settlement, compliance, or dashboard access.
 
