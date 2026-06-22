@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "2026-06-22",
+  "name": "payba3-mcp-tool-contracts",
+  "package": "@grtsnx/payba3",
+  "description": "Suggested MCP-style tool contracts for safely wrapping payba3 in AI agent and IDE environments.",
+  "resources": [
+    {
+      "name": "payba3_llms_index",
+      "uri": "package:@grtsnx/payba3/llms.txt",
+      "mimeType": "text/markdown",
+      "description": "LLM entrypoint for payba3."
+    },
+    {
+      "name": "payba3_agent_guide",
+      "uri": "package:@grtsnx/payba3/agents.md",
+      "mimeType": "text/markdown",
+      "description": "Agent and IDE integration contract."
+    },
+    {
+      "name": "payba3_full_context",
+      "uri": "package:@grtsnx/payba3/llms-full.txt",
+      "mimeType": "text/markdown",
+      "description": "Full payba3 LLM context."
+    }
+  ],
+  "tools": [
+    {
+      "name": "payba3_initialize_paystack_checkout",
+      "description": "Create a Paystack one-time checkout from server-side code.",
+      "requiresHumanApproval": false,
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "amountInKobo", "reference"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "amountInKobo": {
+            "type": "integer",
+            "minimum": 100
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 3
+          },
+          "currency": {
+            "type": "string",
+            "default": "NGN"
+          },
+          "callbackUrl": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "payba3_verify_paystack_transaction",
+      "description": "Verify a Paystack transaction reference before delivering value.",
+      "requiresHumanApproval": false,
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reference"],
+        "properties": {
+          "reference": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "payba3_create_safehaven_subaccount",
+      "description": "Create a Safehaven subaccount from verified server-side identity data.",
+      "requiresHumanApproval": true,
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phoneNumber",
+          "identityType",
+          "emailAddress",
+          "externalReference"
+        ],
+        "properties": {
+          "phoneNumber": {
+            "type": "string"
+          },
+          "identityType": {
+            "type": "string"
+          },
+          "identityId": {
+            "type": "string"
+          },
+          "identityNumber": {
+            "type": "string"
+          },
+          "emailAddress": {
+            "type": "string",
+            "format": "email"
+          },
+          "externalReference": {
+            "type": "string",
+            "minLength": 3
+          },
+          "autoSweep": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    {
+      "name": "payba3_verify_qoreid_cac",
+      "description": "Verify a CAC number through QoreID.",
+      "requiresHumanApproval": false,
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cacNumber"],
+        "properties": {
+          "cacNumber": {
+            "type": "string",
+            "minLength": 3
+          },
+          "version": {
+            "type": "string",
+            "enum": ["v1", "v2", "v3"],
+            "default": "v1"
+          },
+          "level": {
+            "type": "string",
+            "enum": ["basic", "premium"],
+            "default": "basic"
+          }
+        }
+      }
+    },
+    {
+      "name": "payba3_create_monnify_reserved_account",
+      "description": "Create a Monnify reserved account for a customer.",
+      "requiresHumanApproval": true,
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "accountReference",
+          "accountName",
+          "customerName",
+          "customerEmail"
+        ],
+        "properties": {
+          "accountReference": {
+            "type": "string",
+            "minLength": 3
+          },
+          "accountName": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "customerEmail": {
+            "type": "string",
+            "format": "email"
+          },
+          "bvn": {
+            "type": "string"
+          },
+          "nin": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ],
+  "security": {
+    "serverSideOnly": true,
+    "secretsNeverInSchema": true,
+    "defaultEnvironment": "sandbox",
+    "approvalRecommendedFor": [
+      "live transfers",
+      "refunds",
+      "debits",
+      "subaccount creation",
+      "reserved account creation"
+    ]
+  }
+}

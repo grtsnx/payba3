@@ -79,6 +79,9 @@ if (payba3.use('paystack').constructor.name !== 'PaystackService') {
 }
 const llmDocs = [
   '${packageName}/llms.txt',
+  '${packageName}/llms-full.txt',
+  '${packageName}/agents.md',
+  '${packageName}/agents/ide-prompt.md',
   '${packageName}/llms/paystack.txt',
   '${packageName}/llms/safehaven.txt',
   '${packageName}/llms/seerbit.txt',
@@ -92,6 +95,17 @@ for (const doc of llmDocs) {
   const contents = readFileSync(resolved, 'utf8');
   if (!contents.trim()) {
     throw new Error('Empty LLM doc: ' + doc);
+  }
+}
+const agentManifests = [
+  '${packageName}/agents.json',
+  '${packageName}/agents/mcp-tools.json'
+];
+for (const manifest of agentManifests) {
+  const resolved = require.resolve(manifest);
+  const contents = JSON.parse(readFileSync(resolved, 'utf8'));
+  if (!contents.name && !contents.package) {
+    throw new Error('Invalid agent manifest: ' + manifest);
   }
 }
 console.log('${packageName} import smoke passed:', pkg.PAYBA3_CHANNELS.join(', '));

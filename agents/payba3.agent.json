@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "2026-06-22",
+  "name": "payba3",
+  "package": "@grtsnx/payba3",
+  "version": "2.0.1",
+  "purpose": "Framework-neutral payment provider integration surface for server-side apps, IDE agents, automation workers, and LLM tool wrappers.",
+  "install": {
+    "npm": "npm install @grtsnx/payba3",
+    "bun": "bun add @grtsnx/payba3",
+    "pnpm": "pnpm add @grtsnx/payba3",
+    "yarn": "yarn add @grtsnx/payba3"
+  },
+  "runtime": {
+    "type": "server-side",
+    "requires": ["fetch", "URLSearchParams", "Node-compatible crypto APIs"],
+    "doesNotRequire": ["NestJS", "Express", "Fastify", "Next.js"]
+  },
+  "entrypoints": {
+    "rootImport": "@grtsnx/payba3",
+    "factory": "createPayba3",
+    "channelSelector": "payba3.use('<provider>')",
+    "errorClass": "Payba3Error"
+  },
+  "docs": {
+    "index": "@grtsnx/payba3/llms.txt",
+    "full": "@grtsnx/payba3/llms-full.txt",
+    "agentGuide": "@grtsnx/payba3/agents.md",
+    "manifest": "@grtsnx/payba3/agents.json",
+    "mcpToolSchema": "@grtsnx/payba3/agents/mcp-tools.json",
+    "idePrompt": "@grtsnx/payba3/agents/ide-prompt.md",
+    "providers": {
+      "paystack": "@grtsnx/payba3/llms/paystack.txt",
+      "safehaven": "@grtsnx/payba3/llms/safehaven.txt",
+      "seerbit": "@grtsnx/payba3/llms/seerbit.txt",
+      "opay": "@grtsnx/payba3/llms/opay.txt",
+      "mono": "@grtsnx/payba3/llms/mono.txt",
+      "monnify": "@grtsnx/payba3/llms/monnify.txt",
+      "qoreid": "@grtsnx/payba3/llms/qoreid.txt"
+    }
+  },
+  "providers": [
+    "mono",
+    "monnify",
+    "opay",
+    "paystack",
+    "qoreid",
+    "safehaven",
+    "seerbit"
+  ],
+  "integrationFlow": [
+    "Read llms.txt.",
+    "Read agents.md when generating agent, IDE, MCP, or tool-wrapper code.",
+    "Read the provider-specific llms file for every requested provider.",
+    "Generate server-side code only.",
+    "Use createPayba3 with explicit provider config or environment variables.",
+    "Expose narrow tool actions instead of exposing raw provider clients to end users.",
+    "Validate payloads before calling payba3.",
+    "Verify webhooks and transaction status server-side before delivering value."
+  ],
+  "securityRules": [
+    "Never expose provider secrets, JWT client assertions, bearer tokens, access tokens, refresh tokens, or webhook secrets to client-side code.",
+    "Never ask an LLM to invent provider credentials or test live money movement with real customer data.",
+    "Keep provider keys in environment variables or a server-side secret manager.",
+    "Use least-privilege tool actions with explicit JSON schemas.",
+    "Require human approval for live transfers, refunds, debits, or destructive payment actions unless the host application has its own approval policy.",
+    "Log stable references and provider names, not secrets or full request bodies containing sensitive identity/payment data."
+  ],
+  "minimalUsage": {
+    "typescript": "import { createPayba3 } from '@grtsnx/payba3';\n\nconst payba3 = createPayba3({\n  paystack: { secretKey: process.env.PAYSTACK_SECRET_KEY },\n});\n\nconst checkout = await payba3.use('paystack').initializeOneTimeCheckout({\n  email: 'customer@example.com',\n  amountInKobo: 250000,\n  currency: 'NGN',\n  reference: 'order_123',\n});"
+  }
+}

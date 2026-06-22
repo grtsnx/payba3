@@ -1,0 +1,137 @@
+# payba3 Full LLM Context
+
+payba3 is a framework-neutral payment integration package for server-side TypeScript and JavaScript. It gives developers one predictable selector for multiple payment and verification providers.
+
+## Package
+
+- Name: `@grtsnx/payba3`
+- Main import: `createPayba3`
+- Provider selector: `payba3.use('<provider>')`
+- Error class: `Payba3Error`
+- Runtime: server-side Node.js-compatible or Bun-compatible runtime
+- Do not require Nest, Express, Fastify, Next.js, or any other framework to use the root package.
+
+## Agent Discovery
+
+Agents and IDEs should read docs in this order:
+
+1. `@grtsnx/payba3/llms.txt`
+2. `@grtsnx/payba3/agents.md`
+3. `@grtsnx/payba3/llms-full.txt`
+4. Provider-specific docs under `@grtsnx/payba3/llms/<provider>.txt`
+
+Machine-readable files:
+
+- `@grtsnx/payba3/agents.json`
+- `@grtsnx/payba3/agents/mcp-tools.json`
+
+Prompt file:
+
+- `@grtsnx/payba3/agents/ide-prompt.md`
+
+## Supported Providers
+
+- `paystack`: checkout, verification, subscriptions, transfers, dedicated accounts
+- `safehaven`: OAuth token generation, subaccount creation, banking APIs
+- `seerbit`: virtual accounts and collection flows
+- `opay`: cashier checkout, signed payment APIs, refunds, OTP/PIN payment flows
+- `mono`: account linking, payments, BVN lookup, open banking
+- `monnify`: transactions, reserved accounts, transfers, refunds, subaccounts
+- `qoreid`: identity verification, hosted sessions, CAC lookup
+
+## Minimal Usage
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+
+const checkout = await payba3.use('paystack').initializeOneTimeCheckout({
+  email: 'customer@example.com',
+  amountInKobo: 250000,
+  currency: 'NGN',
+  reference: 'order_123',
+});
+```
+
+## Configuration Rule
+
+Configure only the provider being used. Missing credentials for unused providers should not block app startup.
+
+Explicit `createPayba3()` config wins over environment variables:
+
+```ts
+const payba3 = createPayba3({
+  safehaven: {
+    environment: 'sandbox',
+    clientId: process.env.SAFEHAVEN_CLIENT_ID,
+    clientAssertion: process.env.SAFEHAVEN_CLIENT_ASSERTION,
+  },
+  qoreid: {
+    clientId: process.env.QOREID_CLIENT,
+    secret: process.env.QOREID_SECRET,
+  },
+});
+```
+
+## Agent Rules
+
+- Generate server-side code only.
+- Keep provider secrets in environment variables or a server-side secret manager.
+- Never expose API keys, JWT client assertions, access tokens, refresh tokens, webhook secrets, BVN, NIN, OTP, or identity payloads to client-side code.
+- Default to sandbox unless the developer explicitly asks for live.
+- Validate input payloads before calling payba3.
+- Verify webhook signatures before trusting callback payloads.
+- Verify transaction status server-side before marking an order paid or fulfilled.
+- Use `Payba3Error` for package-level error handling.
+- Ask for human approval before live transfers, refunds, debits, or destructive/money-moving actions unless the host app already has an approval workflow.
+
+## Tool Wrapper Rule
+
+Do not expose the raw provider client directly to end users or free-form LLM tools. Expose narrow actions with explicit JSON schemas.
+
+Good:
+
+```ts
+export async function initializeCheckout(input: {
+  email: string;
+  amountInKobo: number;
+  reference: string;
+}) {
+  return payba3.use('paystack').initializeOneTimeCheckout({
+    email: input.email,
+    amountInKobo: input.amountInKobo,
+    currency: 'NGN',
+    reference: input.reference,
+  });
+}
+```
+
+Avoid:
+
+```ts
+export async function callAnyProviderMethod(method: string, payload: unknown) {
+  return (payba3.use('paystack') as any)[method](payload);
+}
+```
+
+## Token Handling
+
+- Safehaven obtains OAuth access tokens and refreshes them before expiry using `expires_in`.
+- Safehaven uses `ibs_client_id` from token responses for subaccount `ClientID` headers.
+- QoreID obtains and refreshes access tokens and accepts both `expiresIn` and `expires_in`.
+- Monnify decodes JWT `exp` when present and refreshes stale access tokens.
+
+## Provider Docs
+
+- Paystack: `@grtsnx/payba3/llms/paystack.txt`
+- Safehaven: `@grtsnx/payba3/llms/safehaven.txt`
+- SeerBit: `@grtsnx/payba3/llms/seerbit.txt`
+- OPay: `@grtsnx/payba3/llms/opay.txt`
+- Mono: `@grtsnx/payba3/llms/mono.txt`
+- Monnify: `@grtsnx/payba3/llms/monnify.txt`
+- QoreID: `@grtsnx/payba3/llms/qoreid.txt`

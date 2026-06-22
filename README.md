@@ -278,7 +278,7 @@ payba3 is intended to be easy for agents, IDE assistants, code generators, and a
 
 ### Agent Documentation Files
 
-The npm package includes an LLM index and provider-specific reference files. Agents and IDEs can read these files from an installed package instead of scraping source code.
+The npm package includes an LLM index, a full LLM context file, an agent guide, a machine-readable manifest, a suggested MCP-style tool schema, and provider-specific references. Agents and IDEs can read these files from an installed package instead of scraping source code.
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -287,16 +287,27 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 const indexPath = require.resolve('@grtsnx/payba3/llms.txt');
+const fullContextPath = require.resolve('@grtsnx/payba3/llms-full.txt');
+const agentGuidePath = require.resolve('@grtsnx/payba3/agents.md');
+const manifestPath = require.resolve('@grtsnx/payba3/agents.json');
 const paystackPath = require.resolve('@grtsnx/payba3/llms/paystack.txt');
 
 const payba3Guide = readFileSync(indexPath, 'utf8');
+const fullContext = readFileSync(fullContextPath, 'utf8');
+const agentGuide = readFileSync(agentGuidePath, 'utf8');
+const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const paystackGuide = readFileSync(paystackPath, 'utf8');
 ```
 
-Available provider docs:
+Available agent and provider docs:
 
 ```text
 @grtsnx/payba3/llms.txt
+@grtsnx/payba3/llms-full.txt
+@grtsnx/payba3/agents.md
+@grtsnx/payba3/agents.json
+@grtsnx/payba3/agents/ide-prompt.md
+@grtsnx/payba3/agents/mcp-tools.json
 @grtsnx/payba3/llms/paystack.txt
 @grtsnx/payba3/llms/safehaven.txt
 @grtsnx/payba3/llms/seerbit.txt
@@ -312,20 +323,24 @@ For IDEs, coding agents, and internal app generators:
 
 1. Install `@grtsnx/payba3`.
 2. Read `@grtsnx/payba3/llms.txt`.
-3. Read the provider file for the requested channel.
-4. Generate server-side code that imports from `@grtsnx/payba3`.
-5. Ask the developer for only the provider environment variables they need.
-6. Keep secrets on the server and verify provider callbacks before delivering value.
+3. Read `@grtsnx/payba3/agents.md`.
+4. Read `@grtsnx/payba3/agents.json` when a machine-readable manifest is useful.
+5. Read the provider file for the requested channel.
+6. Generate server-side code that imports from `@grtsnx/payba3`.
+7. Ask the developer for only the provider environment variables they need.
+8. Keep secrets on the server and verify provider callbacks before delivering value.
 
 Example prompt for an IDE agent:
 
 ```text
 Use @grtsnx/payba3 to add Paystack checkout.
-Read @grtsnx/payba3/llms.txt and @grtsnx/payba3/llms/paystack.txt first.
+Read @grtsnx/payba3/llms.txt, @grtsnx/payba3/agents.md, and @grtsnx/payba3/llms/paystack.txt first.
 Only add server-side code.
 Use PAYSTACK_SECRET_KEY from the environment.
 Verify transactions server-side before marking an order paid.
 ```
+
+For MCP servers or similar tool runtimes, use `@grtsnx/payba3/agents/mcp-tools.json` as a starting contract. It describes safe, narrow tool shapes and marks actions that should generally require human approval, such as account creation and money-moving flows.
 
 For AI tool servers, expose small provider actions instead of exposing raw secrets:
 

@@ -8,6 +8,13 @@ This project follows a human-readable changelog style. Add new entries under `Un
 
 - No unreleased changes.
 
+## 2.0.1
+
+- Added package-exported agent integration docs for IDEs, LLMs, and tool servers.
+- Added `llms-full.txt` for complete LLM context.
+- Added `agents.json`, `agents.md`, `agents/ide-prompt.md`, and `agents/mcp-tools.json`.
+- Updated package smoke tests to prove agent docs resolve from npm and Bun installs.
+
 ## 2.0.0
 
 - Made the root package framework-neutral with `createPayba3()` and plain provider clients.

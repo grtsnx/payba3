@@ -4,6 +4,11 @@ payba3 is a developer-first integration surface for multiple payment and verific
 
 ## Provider References
 
+- Full payba3 context: `@grtsnx/payba3/llms-full.txt` or `llms-full.txt`
+- Agent guide: `@grtsnx/payba3/agents.md` or `agents/payba3.agent.md`
+- Agent manifest: `@grtsnx/payba3/agents.json` or `agents/payba3.agent.json`
+- MCP-style tool schema: `@grtsnx/payba3/agents/mcp-tools.json` or `agents/mcp-tools.json`
+- IDE prompt: `@grtsnx/payba3/agents/ide-prompt.md` or `agents/ide-prompt.md`
 - Paystack: `@grtsnx/payba3/llms/paystack.txt` or `src/lib/paystack/paystack_llm.txt`
 - Safehaven: `@grtsnx/payba3/llms/safehaven.txt` or `src/lib/safehaven/safehaven_llm.txt`
 - SeerBit: `@grtsnx/payba3/llms/seerbit.txt` or `src/lib/seerbit/seerbit_llm.txt`
@@ -24,5 +29,7 @@ payba3 is a developer-first integration surface for multiple payment and verific
 - Verify transaction status server-side before delivering value.
 - Refresh expiring access tokens before they expire.
 - For IDE and AI-agent use, read `@grtsnx/payba3/llms.txt`, then read the provider-specific `@grtsnx/payba3/llms/<provider>.txt` file before generating integration code.
+- For tool-server or MCP-style use, read `@grtsnx/payba3/agents.md` and `@grtsnx/payba3/agents/mcp-tools.json` before exposing payba3 actions as tools.
+- For IDE prompting, use `@grtsnx/payba3/agents/ide-prompt.md`.
 - Agents must generate server-side code only, keep secrets in environment variables, and never expose provider keys to client-side code.
 - Validate package readiness with `bun run pack:dry`, `bun run test:package`, and `bun run test:package:bun`.
