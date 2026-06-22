@@ -1,0 +1,73 @@
+---
+title: Errors
+description: Reference for Payba3Error and normalized provider error behavior.
+icon: triangle-alert
+---
+
+# Errors
+
+payba3 exposes `Payba3Error` as the framework-neutral package error surface.
+
+```ts
+import { Payba3Error } from '@grtsnx/payba3';
+
+try {
+  await payba3.use('paystack').verifyTransaction(reference);
+} catch (error) {
+  if (error instanceof Payba3Error) {
+    console.error(error.getStatus(), error.getResponse());
+  }
+
+  throw error;
+}
+```
+
+## `Payba3Error`
+
+```ts
+new Payba3Error(message, {
+  statusCode,
+  provider,
+  code,
+  data,
+});
+```
+
+## `getStatus()`
+
+Returns the numeric status code.
+
+```ts
+const status = error.getStatus();
+```
+
+## `getResponse()`
+
+Returns the normalized response body.
+
+```ts
+const response = error.getResponse();
+```
+
+Example shape:
+
+```ts
+{
+  statusCode: 400,
+  statusType: 'BAD_REQUEST',
+  message: 'Example failure',
+  provider: 'paystack',
+  code: 'example_failure',
+  data: { reference: 'ref' }
+}
+```
+
+## Common causes
+
+| Cause                       | Typical fix                                                             |
+| --------------------------- | ----------------------------------------------------------------------- |
+| Missing provider credential | Add the credential to `createPayba3()` config or environment variables. |
+| Unsupported channel         | Use one of the names returned by `payba3.list()`.                       |
+| Provider network failure    | Retry safely only when the operation is idempotent.                     |
+| Invalid provider response   | Check provider credentials, environment, and request payload.           |
+| Webhook signature failure   | Verify against the raw body and correct provider secret.                |

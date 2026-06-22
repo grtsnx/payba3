@@ -1,0 +1,45 @@
+---
+title: Mono API
+description: Method reference for the mono channel.
+icon: link
+---
+
+# Mono API
+
+```ts
+const mono = payba3.use('mono');
+```
+
+## Configuration
+
+```ts
+createPayba3({
+  mono: {
+    environment: 'sandbox',
+    secretKey: process.env.MONO_SECRET_KEY,
+  },
+});
+```
+
+## Methods
+
+| Method                                   | Returns                 | Description                                  |
+| ---------------------------------------- | ----------------------- | -------------------------------------------- |
+| `request(path, options)`                 | `Promise<T>`            | Make an authenticated Mono request.          |
+| `initiateAccountLinking(input)`          | `Promise<MonoResponse>` | Start account linking.                       |
+| `exchangeToken(code)`                    | `Promise<MonoResponse>` | Exchange a temporary code for an account id. |
+| `getAccount(accountId)`                  | `Promise<MonoResponse>` | Fetch account details.                       |
+| `getTransactions(accountId, options?)`   | `Promise<MonoResponse>` | Fetch account transactions.                  |
+| `initiatePayment(input)`                 | `Promise<MonoResponse>` | Start a DirectPay payment.                   |
+| `verifyPayment(reference)`               | `Promise<MonoResponse>` | Verify a payment by reference.               |
+| `createDisbursementSourceAccount(input)` | `Promise<MonoResponse>` | Create a disbursement source account.        |
+| `initiateBvnLookup(input)`               | `Promise<MonoResponse>` | Start a BVN lookup.                          |
+
+## Example
+
+```ts
+await mono.initiateAccountLinking({
+  customer: 'customer_123',
+  scope: 'auth',
+});
+```

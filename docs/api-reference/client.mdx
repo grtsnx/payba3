@@ -1,0 +1,110 @@
+---
+title: Client
+description: Reference for createPayba3, Payba3Service, and channel selection.
+icon: square-code
+---
+
+# Client
+
+## `createPayba3(config?)`
+
+Creates a framework-neutral payba3 client.
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+### Parameters
+
+| Name     | Type           | Description                                            |
+| -------- | -------------- | ------------------------------------------------------ |
+| `config` | `Payba3Config` | Optional provider configuration and channel overrides. |
+
+### Returns
+
+```ts
+Payba3Service;
+```
+
+## `Payba3Service`
+
+The client class returned by `createPayba3`.
+
+```ts
+const payba3 = new Payba3Service({
+  mono: {
+    secretKey: process.env.MONO_SECRET_KEY,
+  },
+});
+```
+
+Most applications should use `createPayba3()` instead of constructing the class directly.
+
+## `payba3.list()`
+
+Returns all supported channel names.
+
+```ts
+const channels = payba3.list();
+```
+
+### Returns
+
+```ts
+Payba3ChannelName[]
+```
+
+## `payba3.has(channel)`
+
+Checks whether a string is a supported channel name.
+
+```ts
+if (payba3.has(providerFromConfig)) {
+  const provider = payba3.use(providerFromConfig);
+}
+```
+
+### Parameters
+
+| Name      | Type     | Description            |
+| --------- | -------- | ---------------------- |
+| `channel` | `string` | Channel name to check. |
+
+### Returns
+
+```ts
+channel is Payba3ChannelName
+```
+
+## `payba3.use(channel)`
+
+Returns a provider channel client.
+
+```ts
+const paystack = payba3.use('paystack');
+const mono = payba3.use('mono');
+```
+
+### Parameters
+
+| Name      | Type                | Description                 |
+| --------- | ------------------- | --------------------------- |
+| `channel` | `Payba3ChannelName` | Provider channel to select. |
+
+### Returns
+
+The provider service for that channel.
+
+```ts
+Payba3ChannelMap[Payba3ChannelName];
+```
+
+### Throws
+
+Throws `Payba3Error` when the channel is unsupported.

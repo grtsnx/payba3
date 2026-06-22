@@ -10,7 +10,18 @@ type NavigationPage =
       group?: string;
       page?: string;
       pages?: NavigationPage[];
+      groups?: NavigationGroup[];
     };
+
+type NavigationGroup = {
+  group: string;
+  pages: NavigationPage[];
+};
+
+type NavigationTab = {
+  tab: string;
+  groups: NavigationGroup[];
+};
 
 type MintlifyDocsJson = {
   theme: string;
@@ -27,10 +38,8 @@ type MintlifyDocsJson = {
   };
   favicon?: string;
   navigation: {
-    groups: Array<{
-      group: string;
-      pages: NavigationPage[];
-    }>;
+    groups?: NavigationGroup[];
+    tabs?: NavigationTab[];
   };
 };
 
@@ -52,6 +61,20 @@ const collectNavigationPages = (pages: NavigationPage[]): string[] =>
 
     return collectNavigationPages(page.pages ?? []);
   });
+
+const collectNavigationGroups = (
+  navigation: MintlifyDocsJson['navigation'],
+): NavigationGroup[] => [
+  ...(navigation.groups ?? []),
+  ...(navigation.tabs ?? []).flatMap((tab) => tab.groups),
+];
+
+const collectDocsPages = (
+  navigation: MintlifyDocsJson['navigation'],
+): string[] =>
+  collectNavigationPages(
+    collectNavigationGroups(navigation).flatMap((group) => group.pages),
+  );
 
 const collectMdxFiles = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -81,9 +104,12 @@ describe('Mintlify documentation', () => {
     expect(docsJson.theme).toBe('mint');
     expect(docsJson.name).toBe('payba3');
     expect(typeof docsJson.colors.primary).toBe('string');
-    expect(Array.isArray(docsJson.navigation.groups)).toBe(true);
+    expect(Array.isArray(docsJson.navigation.tabs)).toBe(true);
     expect(docsJson.description).toContain('payment');
-    expect(docsJson.navigation.groups.length).toBeGreaterThanOrEqual(8);
+    expect(docsJson.navigation.tabs?.map((tab) => tab.tab)).toEqual([
+      'Documentation',
+      'API Reference',
+    ]);
     expectLocalAsset(docsJson.logo?.light);
     expectLocalAsset(docsJson.logo?.dark);
     expectLocalAsset(docsJson.favicon);
@@ -92,15 +118,16 @@ describe('Mintlify documentation', () => {
   it('supports both repo-root and docs-directory Mintlify project roots', () => {
     const rootDocsJson = readJson<MintlifyDocsJson>('docs.json');
     const docsDirectoryJson = readJson<MintlifyDocsJson>('docs/docs.json');
-    const rootNavPages = collectNavigationPages(
-      rootDocsJson.navigation.groups.flatMap((group) => group.pages),
-    ).sort();
-    const docsDirectoryPages = collectNavigationPages(
-      docsDirectoryJson.navigation.groups.flatMap((group) => group.pages),
+    const rootNavPages = collectDocsPages(rootDocsJson.navigation).sort();
+    const docsDirectoryPages = collectDocsPages(
+      docsDirectoryJson.navigation,
     ).sort();
 
     expect(rootDocsJson.name).toBe(docsDirectoryJson.name);
     expect(rootDocsJson.theme).toBe(docsDirectoryJson.theme);
+    expect(rootDocsJson.navigation.tabs?.map((tab) => tab.tab)).toEqual(
+      docsDirectoryJson.navigation.tabs?.map((tab) => tab.tab),
+    );
     expect(rootNavPages.map((page) => page.replace(/^docs\//, ''))).toEqual(
       docsDirectoryPages,
     );
@@ -116,9 +143,7 @@ describe('Mintlify documentation', () => {
 
   it('keeps every Mintlify navigation page backed by an MDX file', () => {
     const docsJson = readJson<MintlifyDocsJson>('docs.json');
-    const navPages = collectNavigationPages(
-      docsJson.navigation.groups.flatMap((group) => group.pages),
-    );
+    const navPages = collectDocsPages(docsJson.navigation);
     const uniqueNavPages = [...new Set(navPages)];
 
     expect(uniqueNavPages).toHaveLength(navPages.length);
@@ -131,9 +156,7 @@ describe('Mintlify documentation', () => {
 
   it('keeps every docs MDX page reachable from Mintlify navigation', () => {
     const docsJson = readJson<MintlifyDocsJson>('docs.json');
-    const navPages = collectNavigationPages(
-      docsJson.navigation.groups.flatMap((group) => group.pages),
-    ).sort();
+    const navPages = collectDocsPages(docsJson.navigation).sort();
     const mdxPages = collectMdxFiles(join(rootDir, 'docs'))
       .map(toMintlifyPagePath)
       .sort();
@@ -158,12 +181,41 @@ describe('Mintlify documentation', () => {
   it('documents every public provider channel with setup and usage context', () => {
     for (const channel of PAYBA3_CHANNELS) {
       const providerDoc = readText(`docs/providers/${channel}.mdx`);
+      const apiReferenceDoc = readText(
+        `docs/api-reference/providers/${channel}.mdx`,
+      );
 
       expect(providerDoc).toContain(`payba3.use('${channel}')`);
       expect(providerDoc).toContain('## Signup and docs');
       expect(providerDoc).toContain('## Configuration');
       expect(providerDoc).toContain('API docs');
+      expect(apiReferenceDoc).toContain(`payba3.use('${channel}')`);
+      expect(apiReferenceDoc).toContain('## Methods');
     }
+  });
+
+  it('keeps public navigation focused on documentation and API reference', () => {
+    const docsJson = readJson<MintlifyDocsJson>('docs.json');
+    const groupNames = collectNavigationGroups(docsJson.navigation).map(
+      (group) => group.group,
+    );
+    const pages = collectDocsPages(docsJson.navigation);
+
+    expect(docsJson.navigation.tabs?.map((tab) => tab.tab)).toEqual([
+      'Documentation',
+      'API Reference',
+    ]);
+    expect(groupNames).toEqual(expect.arrayContaining(['Provider APIs']));
+    expect(groupNames).not.toContain('Operations');
+    expect(pages).toEqual(
+      expect.arrayContaining([
+        'docs/api-reference/introduction',
+        'docs/api-reference/client',
+        'docs/api-reference/configuration',
+        'docs/api-reference/errors',
+      ]),
+    );
+    expect(pages.some((page) => page.includes('/operations/'))).toBe(false);
   });
 
   it('documents the framework-neutral and agent integration paths', () => {
@@ -177,6 +229,9 @@ describe('Mintlify documentation', () => {
     );
     expect(readText('docs/examples/nestjs.mdx')).toContain(
       'does not require Nest',
+    );
+    expect(readText('docs/api-reference/introduction.mdx')).toContain(
+      'server-side TypeScript and JavaScript SDK',
     );
   });
 

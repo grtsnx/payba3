@@ -14,82 +14,107 @@
   },
   "favicon": "/assets/payba3-logo.svg",
   "navigation": {
-    "groups": [
+    "tabs": [
       {
-        "group": "Start",
-        "pages": [
-          "docs/introduction",
-          "docs/quickstart",
-          "docs/installation",
-          "docs/configuration"
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Start",
+            "pages": [
+              "docs/introduction",
+              "docs/quickstart",
+              "docs/installation",
+              "docs/configuration"
+            ]
+          },
+          {
+            "group": "Core concepts",
+            "pages": [
+              "docs/concepts/client",
+              "docs/concepts/channels",
+              "docs/concepts/errors",
+              "docs/concepts/token-refresh",
+              "docs/concepts/live-mode"
+            ]
+          },
+          {
+            "group": "Providers",
+            "pages": [
+              "docs/providers/paystack",
+              "docs/providers/safehaven",
+              "docs/providers/seerbit",
+              "docs/providers/opay",
+              "docs/providers/mono",
+              "docs/providers/monnify",
+              "docs/providers/qoreid"
+            ]
+          },
+          {
+            "group": "Agents and IDEs",
+            "pages": [
+              "docs/agents/overview",
+              "docs/agents/llm-docs",
+              "docs/agents/ide-integration",
+              "docs/agents/mcp-tool-servers",
+              "docs/agents/tool-safety"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "docs/examples/node",
+              "docs/examples/express",
+              "docs/examples/nextjs",
+              "docs/examples/nestjs",
+              "docs/examples/cloudflare-workers"
+            ]
+          },
+          {
+            "group": "Security",
+            "pages": [
+              "docs/security/overview",
+              "docs/security/secrets",
+              "docs/security/webhooks",
+              "docs/security/agent-safety"
+            ]
+          },
+          {
+            "group": "Migration",
+            "pages": ["docs/migration/v1-to-v2"]
+          }
         ]
       },
       {
-        "group": "Core concepts",
-        "pages": [
-          "docs/concepts/client",
-          "docs/concepts/channels",
-          "docs/concepts/errors",
-          "docs/concepts/token-refresh",
-          "docs/concepts/live-mode"
-        ]
-      },
-      {
-        "group": "Providers",
-        "pages": [
-          "docs/providers/paystack",
-          "docs/providers/safehaven",
-          "docs/providers/seerbit",
-          "docs/providers/opay",
-          "docs/providers/mono",
-          "docs/providers/monnify",
-          "docs/providers/qoreid"
-        ]
-      },
-      {
-        "group": "Agents and IDEs",
-        "pages": [
-          "docs/agents/overview",
-          "docs/agents/llm-docs",
-          "docs/agents/ide-integration",
-          "docs/agents/mcp-tool-servers",
-          "docs/agents/tool-safety"
-        ]
-      },
-      {
-        "group": "Examples",
-        "pages": [
-          "docs/examples/node",
-          "docs/examples/express",
-          "docs/examples/nextjs",
-          "docs/examples/nestjs",
-          "docs/examples/cloudflare-workers"
-        ]
-      },
-      {
-        "group": "Security",
-        "pages": [
-          "docs/security/overview",
-          "docs/security/secrets",
-          "docs/security/webhooks",
-          "docs/security/agent-safety"
-        ]
-      },
-      {
-        "group": "Operations",
-        "pages": [
-          "docs/operations/testing",
-          "docs/operations/ci",
-          "docs/operations/releasing",
-          "docs/migration/v1-to-v2"
-        ]
-      },
-      {
-        "group": "Reference",
-        "pages": [
-          "docs/reference/environment-variables",
-          "docs/reference/package-exports",
-          "docs/reference/provider-methods"
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "docs/api-reference/introduction",
+              "docs/api-reference/client",
+              "docs/api-reference/configuration",
+              "docs/api-reference/errors"
+            ]
+          },
+          {
+            "group": "Provider APIs",
+            "pages": [
+              "docs/api-reference/providers/paystack",
+              "docs/api-reference/providers/safehaven",
+              "docs/api-reference/providers/seerbit",
+              "docs/api-reference/providers/opay",
+              "docs/api-reference/providers/mono",
+              "docs/api-reference/providers/monnify",
+              "docs/api-reference/providers/qoreid"
+            ]
+          },
+          {
+            "group": "Package",
+            "pages": [
+              "docs/reference/environment-variables",
+              "docs/reference/package-exports"
+            ]
+          }
         ]
       }
     ]

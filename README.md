@@ -58,7 +58,7 @@ bun run docs:dev:docs
 
 Use a Mintlify-supported LTS Node runtime for docs commands. Node 26 is not supported by the Mintlify CLI at the moment.
 
-The docs cover installation, configuration, provider-specific usage, examples for common frameworks, agent and IDE integration, security, operations, migration, and reference material.
+The docs cover installation, configuration, provider-specific usage, examples for common frameworks, agent and IDE integration, security, migration, and a separate API Reference tab.
 
 ## About
 

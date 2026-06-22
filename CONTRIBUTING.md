@@ -54,14 +54,15 @@ payba3/
 │   └── payba3-mark.svg            # Compact icon/mark
 ├── docs/
 │   ├── assets/                    # Docs-local assets for Mintlify /docs root
+│   ├── api-reference/             # SDK/API reference tab
 │   ├── agents/                    # AI agent, IDE, and tool-server guides
 │   ├── concepts/                  # Core concepts such as channels, errors, tokens
 │   ├── examples/                  # Framework and runtime usage examples
 │   ├── migration/                 # Version migration notes
-│   ├── operations/                # Testing, CI, and release documentation
 │   ├── providers/                 # Provider-specific integration guides
-│   ├── reference/                 # Env vars, exports, and method references
+│   ├── reference/                 # Env vars and package exports
 │   ├── security/                  # Security guidance for app and agent usage
+│   ├── ASSISTANT.md               # Docs-root assistant instructions
 │   ├── configuration.mdx          # Configuration guide
 │   ├── docs.json                  # Mintlify config when project directory is /docs
 │   ├── installation.mdx           # Installation guide

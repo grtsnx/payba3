@@ -1,0 +1,44 @@
+---
+title: QoreID API
+description: Method reference for the qoreid channel.
+icon: badge-check
+---
+
+# QoreID API
+
+```ts
+const qoreid = payba3.use('qoreid');
+```
+
+## Configuration
+
+```ts
+createPayba3({
+  qoreid: {
+    environment: 'sandbox',
+    clientId: process.env.QOREID_CLIENT,
+    secret: process.env.QOREID_SECRET,
+  },
+});
+```
+
+## Methods
+
+| Method                                 | Returns                                | Description                                                         |
+| -------------------------------------- | -------------------------------------- | ------------------------------------------------------------------- |
+| `getToken()`                           | `Promise<string>`                      | Return a cached QoreID token or generate a fresh one before expiry. |
+| `createSession(input)`                 | `Promise<QoreIDCreateSessionResponse>` | Create a hosted verification session.                               |
+| `verifyCacNumber(cacNumber, options?)` | `Promise<QoreIDVerifyCacResponse>`     | Verify a CAC number using the selected version and level.           |
+
+## Token behavior
+
+QoreID token responses may use either `expiresIn` or `expires_in`. payba3 normalizes both shapes and refreshes stale tokens automatically.
+
+## Example
+
+```ts
+await qoreid.verifyCacNumber('RC123456', {
+  version: 'v3',
+  level: 'premium',
+});
+```

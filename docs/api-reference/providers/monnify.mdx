@@ -1,0 +1,53 @@
+---
+title: Monnify API
+description: Method reference for the monnify channel.
+icon: landmark
+---
+
+# Monnify API
+
+```ts
+const monnify = payba3.use('monnify');
+```
+
+## Configuration
+
+```ts
+createPayba3({
+  monnify: {
+    environment: 'sandbox',
+    apiKey: process.env.MONNIFY_API_KEY,
+    secretKey: process.env.MONNIFY_SECRET_KEY,
+    contractCode: process.env.MONNIFY_CONTRACT_CODE,
+  },
+});
+```
+
+## Methods
+
+| Method                                    | Returns                    | Description                                                         |
+| ----------------------------------------- | -------------------------- | ------------------------------------------------------------------- |
+| `getAccessToken()`                        | `Promise<string>`          | Return a cached access token or generate a fresh one before expiry. |
+| `request(path, options)`                  | `Promise<T>`               | Make an authenticated Monnify request.                              |
+| `initializeTransaction(input)`            | `Promise<MonnifyResponse>` | Initialize a transaction.                                           |
+| `initializeBankTransfer(input)`           | `Promise<MonnifyResponse>` | Initialize a bank-transfer payment.                                 |
+| `getTransactionStatus(reference)`         | `Promise<MonnifyResponse>` | Get transaction status by transaction reference.                    |
+| `queryTransactionStatus(reference)`       | `Promise<MonnifyResponse>` | Query transaction status by payment reference.                      |
+| `createReservedAccount(input)`            | `Promise<MonnifyResponse>` | Create a reserved account.                                          |
+| `getReservedAccountDetails(reference)`    | `Promise<MonnifyResponse>` | Fetch reserved account details.                                     |
+| `initiateSingleTransfer(input)`           | `Promise<MonnifyResponse>` | Start a single transfer.                                            |
+| `createSubAccounts(input)`                | `Promise<MonnifyResponse>` | Create subaccounts.                                                 |
+| `initiateRefund(input)`                   | `Promise<MonnifyResponse>` | Initiate a refund.                                                  |
+| `verifyWebhookSignature(body, signature)` | `boolean`                  | Verify a Monnify webhook signature.                                 |
+
+## Example
+
+```ts
+await monnify.createReservedAccount({
+  accountReference: 'customer_123',
+  accountName: 'Jane Doe',
+  customerName: 'Jane Doe',
+  customerEmail: 'jane@example.com',
+  bvn: '00000000000',
+});
+```

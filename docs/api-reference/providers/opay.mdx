@@ -1,0 +1,53 @@
+---
+title: OPay API
+description: Method reference for the opay channel.
+icon: badge-dollar-sign
+---
+
+# OPay API
+
+```ts
+const opay = payba3.use('opay');
+```
+
+## Configuration
+
+```ts
+createPayba3({
+  opay: {
+    environment: 'sandbox',
+    merchantId: process.env.OPAY_MERCHANT_ID,
+    publicKey: process.env.OPAY_PUBLIC_KEY,
+    secretKey: process.env.OPAY_SECRET_KEY,
+  },
+});
+```
+
+## Methods
+
+| Method                            | Returns                 | Description                           |
+| --------------------------------- | ----------------------- | ------------------------------------- |
+| `request(path, options)`          | `Promise<T>`            | Make a signed OPay request.           |
+| `createCashierPayment(input)`     | `Promise<OPayResponse>` | Create a Cashier payment.             |
+| `createPayment(input)`            | `Promise<OPayResponse>` | Create a payment.                     |
+| `queryPaymentStatus(input)`       | `Promise<OPayResponse>` | Query payment status.                 |
+| `cancelPayment(input)`            | `Promise<OPayResponse>` | Cancel a payment.                     |
+| `createRefund(input)`             | `Promise<OPayResponse>` | Create a refund.                      |
+| `queryRefundStatus(input)`        | `Promise<OPayResponse>` | Query refund status.                  |
+| `sendOtp(input)`                  | `Promise<OPayResponse>` | Send OTP for an authenticated flow.   |
+| `inputOtp(input)`                 | `Promise<OPayResponse>` | Submit OTP for an authenticated flow. |
+| `inputPin(input)`                 | `Promise<OPayResponse>` | Submit PIN for an authenticated flow. |
+| `verifyCallback(body, signature)` | `boolean`               | Verify an OPay callback signature.    |
+
+## Example
+
+```ts
+await opay.createCashierPayment({
+  reference: 'order_123',
+  amount: {
+    total: 250000,
+    currency: 'NGN',
+  },
+  returnUrl: 'https://example.com/payments/return',
+});
+```

@@ -1,0 +1,59 @@
+---
+title: API Reference
+description: SDK reference for the payba3 package, client, provider channels, and package exports.
+icon: book-open
+---
+
+# API Reference
+
+The payba3 API is a server-side TypeScript and JavaScript SDK surface. It is not a hosted HTTP API. You install the package, create a client, select a provider channel, and call provider methods.
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+
+const checkout = await payba3.use('paystack').initializeOneTimeCheckout({
+  email: 'customer@example.com',
+  amountInKobo: 250000,
+  currency: 'NGN',
+  reference: 'order_123',
+});
+```
+
+## Package entry
+
+```ts
+import { createPayba3, Payba3Error, Payba3Service } from '@grtsnx/payba3';
+```
+
+## Channel names
+
+```ts
+type Payba3ChannelName =
+  | 'mono'
+  | 'monnify'
+  | 'opay'
+  | 'paystack'
+  | 'qoreid'
+  | 'safehaven'
+  | 'seerbit';
+```
+
+## Reference sections
+
+| Section         | What it covers                                               |
+| --------------- | ------------------------------------------------------------ |
+| Client          | `createPayba3`, `Payba3Service`, `list`, `has`, and `use`    |
+| Configuration   | Provider config object and environment variables             |
+| Errors          | `Payba3Error` and provider wrapper errors                    |
+| Provider APIs   | Public methods available on each provider channel            |
+| Package exports | LLM, agent, provider reference, and package metadata exports |
+
+## Safety model
+
+The SDK handles provider request construction, signing, token reuse, and token refresh where implemented. Your application still owns authorization, idempotency, persistence, reconciliation, and user-facing payment state.

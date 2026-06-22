@@ -1,0 +1,64 @@
+---
+title: Paystack API
+description: Method reference for the paystack channel.
+icon: credit-card
+---
+
+# Paystack API
+
+```ts
+const paystack = payba3.use('paystack');
+```
+
+## Configuration
+
+```ts
+createPayba3({
+  paystack: {
+    environment: 'sandbox',
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+## Methods
+
+| Method                                                         | Returns                                     | Description                                           |
+| -------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| `createPaystackCustomer(input)`                                | `Promise<unknown>`                          | Create a customer with a simplified customer payload. |
+| `createDedicatedAccount(customerCode)`                         | `Promise<unknown>`                          | Create a dedicated virtual account for a customer.    |
+| `retrieveDedicatedAccount(dedicatedAccountId)`                 | `Promise<unknown>`                          | Retrieve dedicated account details.                   |
+| `retrieveCustomerCode(email)`                                  | `Promise<string \| undefined>`              | Resolve a customer code by email.                     |
+| `initializeTransaction(email, amount, currency, callbackUrl?)` | `Promise<unknown>`                          | Initialize a transaction using simple arguments.      |
+| `initializeSubscriptionCheckout(input)`                        | `Promise<unknown>`                          | Start checkout for a subscription flow.               |
+| `listCustomerSubscriptions(customerCodeOrEmail)`               | `Promise<unknown>`                          | List subscriptions for a customer.                    |
+| `verifyTransaction(reference)`                                 | `Promise<unknown>`                          | Verify a transaction by reference.                    |
+| `initializeOneTimeCheckout(input)`                             | `Promise<unknown>`                          | Start a one-time checkout.                            |
+| `chargeAuthorization(input)`                                   | `Promise<unknown>`                          | Charge a saved authorization.                         |
+| `getBanks()`                                                   | `Promise<PaystackResponse<PaystackBank[]>>` | List banks.                                           |
+| `getBankById(bankId)`                                          | `Promise<PaystackBank \| null>`             | Find a bank by Paystack bank id.                      |
+| `getBankByCode(bankCode)`                                      | `Promise<PaystackBank \| null>`             | Find a bank by bank code.                             |
+| `resolveBankAccount(accountNumber, bankCode)`                  | `Promise<unknown>`                          | Resolve account ownership details.                    |
+| `verifyWebhookSignature(body, headers)`                        | `void`                                      | Verify a Paystack webhook signature.                  |
+| `handlePaystackWebhook(event)`                                 | `unknown`                                   | Dispatch a parsed Paystack webhook event.             |
+| `fetchPlan(planCode)`                                          | `Promise<unknown>`                          | Fetch a plan.                                         |
+| `createSubscription(input)`                                    | `Promise<unknown>`                          | Create a subscription.                                |
+| `fetchSubscription(idOrCode)`                                  | `Promise<unknown>`                          | Fetch a subscription.                                 |
+| `disableSubscription(code, token)`                             | `Promise<unknown>`                          | Disable a subscription.                               |
+| `createCustomer(data)`                                         | `Promise<unknown>`                          | Create a customer with the Paystack customer payload. |
+| `fetchCustomerByEmail(email)`                                  | `Promise<unknown>`                          | Fetch a customer by email.                            |
+| `createTransferRecipient(input)`                               | `Promise<unknown>`                          | Create a transfer recipient.                          |
+| `deleteTransferRecipient(idOrCode)`                            | `Promise<unknown>`                          | Delete a transfer recipient.                          |
+| `initiateTransfer(input)`                                      | `Promise<unknown>`                          | Initiate a transfer.                                  |
+| `getPaystackBalance()`                                         | `Promise<unknown>`                          | Fetch account balance.                                |
+
+## Example
+
+```ts
+await paystack.initializeOneTimeCheckout({
+  email: 'customer@example.com',
+  amountInKobo: 250000,
+  currency: 'NGN',
+  reference: 'order_123',
+});
+```

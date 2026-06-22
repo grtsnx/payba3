@@ -1,0 +1,76 @@
+---
+title: Configuration
+description: Reference for Payba3Config and provider configuration options.
+icon: settings-2
+---
+
+# Configuration
+
+Configure only the providers your application uses. Unused providers do not need credentials.
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    environment: 'sandbox',
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+  safehaven: {
+    environment: 'sandbox',
+    clientId: process.env.SAFEHAVEN_CLIENT_ID,
+    clientAssertion: process.env.SAFEHAVEN_CLIENT_ASSERTION,
+  },
+});
+```
+
+## `Payba3Config`
+
+```ts
+type Payba3Config = {
+  mono?: MonoServiceOptions;
+  monnify?: MonnifyServiceOptions;
+  opay?: OPayServiceOptions;
+  paystack?: PaystackServiceOptions;
+  qoreid?: QoreIDServiceOptions;
+  safehaven?: SafehavenServiceOptions;
+  seerbit?: SeerbitServiceOptions;
+  channels?: Partial<Payba3ChannelMap>;
+};
+```
+
+## Common option fields
+
+Most provider configs support some of these fields.
+
+| Field         | Type                            | Description                                             |
+| ------------- | ------------------------------- | ------------------------------------------------------- |
+| `environment` | `'sandbox' \| 'live' \| string` | Selects sandbox/test or live credentials and base URLs. |
+| `baseUrl`     | `string`                        | Optional provider base URL override.                    |
+| `timeoutMs`   | `number`                        | Optional request timeout for providers that support it. |
+
+## Provider credential fields
+
+| Provider  | Required fields                        |
+| --------- | -------------------------------------- |
+| Paystack  | `secretKey`                            |
+| Safehaven | `clientId`, `clientAssertion`          |
+| SeerBit   | `publicKey`, `secretKey`               |
+| OPay      | `merchantId`, `publicKey`, `secretKey` |
+| Mono      | `secretKey`                            |
+| Monnify   | `apiKey`, `secretKey`, `contractCode`  |
+| QoreID    | `clientId`, `secret`                   |
+
+## Channel overrides
+
+Use `channels` when tests or advanced applications need to inject a custom provider implementation.
+
+```ts
+const payba3 = createPayba3({
+  channels: {
+    paystack: fakePaystackService,
+  },
+});
+```
+
+For normal applications, configure provider options instead.

@@ -1,0 +1,42 @@
+---
+title: SeerBit API
+description: Method reference for the seerbit channel.
+icon: wallet-cards
+---
+
+# SeerBit API
+
+```ts
+const seerbit = payba3.use('seerbit');
+```
+
+## Configuration
+
+```ts
+createPayba3({
+  seerbit: {
+    environment: 'sandbox',
+    publicKey: process.env.SEERBIT_PUBLIC_KEY,
+    secretKey: process.env.SEERBIT_SECRET_KEY,
+  },
+});
+```
+
+## Methods
+
+| Method                                | Returns                                  | Description                                        |
+| ------------------------------------- | ---------------------------------------- | -------------------------------------------------- |
+| `getBearerToken()`                    | `Promise<string>`                        | Return a cached bearer token or request a new one. |
+| `createVirtualAccount(input)`         | `Promise<SeerbitVirtualAccountResponse>` | Create a virtual account.                          |
+| `getVirtualAccount(accountReference)` | `Promise<SeerbitVirtualAccountResponse>` | Fetch a virtual account by account reference.      |
+
+## Example
+
+```ts
+await seerbit.createVirtualAccount({
+  publicKey: process.env.SEERBIT_PUBLIC_KEY,
+  fullName: 'Jane Doe',
+  accountReference: 'customer_123',
+  currency: 'NGN',
+});
+```

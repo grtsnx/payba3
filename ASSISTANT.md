@@ -7,6 +7,7 @@ Prefer these paths:
 - Start with `docs/quickstart.mdx` for first-time setup.
 - Use `docs/configuration.mdx` for credentials and sandbox/live switching.
 - Use `docs/providers/*.mdx` for provider-specific methods.
+- Use `docs/api-reference/*.mdx` for SDK signatures and method references.
 - Use `docs/agents/*.mdx` for AI agent, IDE, and MCP-style integrations.
 - Use `docs/security/*.mdx` before recommending production payment flows.
 

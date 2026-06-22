@@ -1,0 +1,48 @@
+---
+title: Safehaven API
+description: Method reference for the safehaven channel.
+icon: building-2
+---
+
+# Safehaven API
+
+```ts
+const safehaven = payba3.use('safehaven');
+```
+
+## Configuration
+
+```ts
+createPayba3({
+  safehaven: {
+    environment: 'sandbox',
+    clientId: process.env.SAFEHAVEN_CLIENT_ID,
+    clientAssertion: process.env.SAFEHAVEN_CLIENT_ASSERTION,
+    timeoutMs: 10000,
+  },
+});
+```
+
+## Methods
+
+| Method                    | Returns                                | Description                                                           |
+| ------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| `getAccessToken()`        | `Promise<SafehavenTokenResponse>`      | Return a cached OAuth token or generate a fresh one before expiry.    |
+| `createSubAccount(input)` | `Promise<SafehavenSubAccountResponse>` | Create a Safehaven subaccount using the configured OAuth credentials. |
+
+## Token behavior
+
+Safehaven tokens are cached with an expiry window. Protected calls refresh the token automatically when the cached token is no longer fresh.
+
+## Example
+
+```ts
+await safehaven.createSubAccount({
+  phoneNumber: '08000000000',
+  identityType: 'vID',
+  identityId: 'identity-id',
+  emailAddress: 'customer@example.com',
+  externalReference: 'customer_123',
+  autoSweep: false,
+});
+```
