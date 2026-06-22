@@ -118,6 +118,32 @@ describe('SeerbitService', () => {
     });
   });
 
+  it('uses explicit constructor options for base URL and credentials', async () => {
+    const service = new SeerbitService({
+      baseUrl: 'https://seerbit.example.test/api/v2///',
+      publicKey: 'option-public',
+      secretKey: 'option-secret',
+    });
+
+    await service.createVirtualAccount({
+      fullName: 'Jane Doe',
+      email: 'jane@example.com',
+      reference: 'customer-ref',
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'https://seerbit.example.test/api/v2/encrypt/keys',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(getFetchBody(0)).toEqual({
+      key: 'option-secret.option-public',
+    });
+    expect(getFetchBody(1)).toMatchObject({
+      publicKey: 'option-public',
+    });
+  });
+
   it('reuses generated bearer tokens for virtual account lookups', async () => {
     const service = new SeerbitService();
 

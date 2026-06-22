@@ -57,6 +57,29 @@ describe('OPayService', () => {
     );
   });
 
+  it('uses explicit constructor options for base URL and credentials', async () => {
+    const service = new OPayService({
+      baseUrl: 'https://opay.example.test///',
+      merchantId: 'option-merchant',
+      publicKey: 'option-public',
+      secretKey: 'option-secret',
+    });
+
+    await service.createCashierPayment({
+      reference: 'cashier-ref',
+      amount: { total: 25_000, currency: 'NGN' },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://opay.example.test/api/v1/international/cashier/create',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(getFetchHeaders(0)).toMatchObject({
+      Authorization: 'Bearer option-public',
+      MerchantId: 'option-merchant',
+    });
+  });
+
   it('uses public-key auth only for cashier creation', async () => {
     const service = new OPayService();
 

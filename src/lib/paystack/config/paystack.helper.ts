@@ -1,11 +1,9 @@
 import * as crypto from 'crypto';
 import {
-  BadGatewayException,
-  HttpStatus,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { handleResponse } from '../../shared/response.helper';
+  getPayba3ErrorMessage,
+  handleResponse,
+  PAYBA3_HTTP_STATUS,
+} from '../../shared';
 import type {
   NormalizedPaystackEnvironment,
   PaystackEnvironment,
@@ -55,7 +53,10 @@ export const buildPaystackRequestInit = (
 
 export const assertPaystackSecret = (secret: string): string => {
   if (!secret) {
-    throw new InternalServerErrorException('Paystack secret key not set');
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Paystack secret key not set',
+    );
   }
 
   return secret;
@@ -85,7 +86,7 @@ export const isPaystackErrorResponse = (
   ('status' in value || 'message' in value);
 
 export const getPaystackErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : 'Request failed';
+  getPayba3ErrorMessage(error, 'Request failed');
 
 export const requestPaystack = async <T = unknown>({
   baseUrl,
@@ -102,16 +103,22 @@ export const requestPaystack = async <T = unknown>({
       buildPaystackRequestInit(paystackSecret, options),
     );
   } catch (error) {
-    throw new BadGatewayException({
-      message: 'Paystack request failed',
-      data: getPaystackErrorMessage(error),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'Paystack request failed',
+      {
+        data: getPaystackErrorMessage(error),
+      },
+    );
   }
 
   const responseBody = await parsePaystackResponse(response);
 
   if (response.status === 401) {
-    throw new UnauthorizedException('Unauthorized request to Paystack');
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.UNAUTHORIZED,
+      'Unauthorized request to Paystack',
+    );
   }
 
   if (!response.ok) {
@@ -120,14 +127,14 @@ export const requestPaystack = async <T = unknown>({
       responseBody.status === false
     ) {
       throw new handleResponse(
-        HttpStatus.BAD_REQUEST,
+        PAYBA3_HTTP_STATUS.BAD_REQUEST,
         responseBody.message ?? 'Paystack request failed',
         responseBody,
       );
     }
 
     throw new handleResponse(
-      HttpStatus.INTERNAL_SERVER_ERROR,
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Request failed',
       responseBody,
     );

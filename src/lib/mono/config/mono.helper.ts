@@ -1,16 +1,21 @@
 import {
-  BadGatewayException,
-  HttpStatus,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { handleResponse } from '../../shared/response.helper';
+  getPayba3ErrorMessage,
+  handleResponse,
+  PAYBA3_HTTP_STATUS,
+} from '../../shared';
 import type {
   MonoEnvironment,
+  NormalizedMonoEnvironment,
   MonoRequestContext,
   MonoRequestOptions,
 } from './mono.types';
 
 export const MONO_BASE_URL = 'https://api.withmono.com';
+
+export const normalizeMonoEnvironment = (
+  environment?: string,
+): NormalizedMonoEnvironment =>
+  environment === 'live' || environment === 'production' ? 'live' : 'sandbox';
 
 export const getMonoBaseUrl = (baseUrlOverride?: string): string =>
   (baseUrlOverride ?? MONO_BASE_URL).replace(/\/+$/, '');
@@ -18,14 +23,17 @@ export const getMonoBaseUrl = (baseUrlOverride?: string): string =>
 export const getMonoSecretKey = (
   environment: MonoEnvironment,
 ): string | undefined =>
-  (environment === 'live'
+  (normalizeMonoEnvironment(environment) === 'live'
     ? process.env.MONO_LIVE_SECRET_KEY
     : process.env.MONO_SECRET_KEY
   )?.trim();
 
 export const assertMonoSecretKey = (secretKey: string): string => {
   if (!secretKey) {
-    throw new InternalServerErrorException('MONO_SECRET_KEY is not configured');
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'MONO_SECRET_KEY is not configured',
+    );
   }
 
   return secretKey;
@@ -66,7 +74,7 @@ export const parseMonoResponse = async (
 };
 
 export const getMonoErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : 'Mono request failed';
+  getPayba3ErrorMessage(error, 'Mono request failed');
 
 export const requestMono = async <T = unknown>({
   baseUrl,
@@ -84,17 +92,20 @@ export const requestMono = async <T = unknown>({
       buildMonoRequestInit(key, options),
     );
   } catch (error) {
-    throw new BadGatewayException({
-      message: 'Mono request failed',
-      data: getMonoErrorMessage(error),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'Mono request failed',
+      {
+        data: getMonoErrorMessage(error),
+      },
+    );
   }
 
   const body = await parseMonoResponse(response);
 
   if (!response.ok) {
     throw new handleResponse(
-      HttpStatus.BAD_REQUEST,
+      PAYBA3_HTTP_STATUS.BAD_REQUEST,
       'Mono request failed',
       body,
     );

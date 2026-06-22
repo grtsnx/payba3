@@ -10,7 +10,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const rootDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+);
 const packageJson = JSON.parse(
   readFileSync(path.join(rootDir, 'package.json'), 'utf8'),
 );
@@ -47,20 +50,15 @@ const packOutput = execFileSync(
 );
 const [{ filename }] = JSON.parse(packOutput);
 const tarballPath = path.join(tempDir, filename);
-const peerPackages = [
-  '@nestjs/common@^11.0.1',
-  '@nestjs/config@^4.0.4',
-  '@nestjs/core@^11.0.1',
-  'reflect-metadata@^0.2.2',
-  'rxjs@^7.8.1',
-];
+const peerPackages = [];
 
 const smokeSource = `
 const { readFileSync } = require('node:fs');
 const pkg = require('${packageName}');
 const required = [
-  'LibModule',
+  'createPayba3',
   'Payba3Service',
+  'Payba3Error',
   'PAYBA3_CHANNELS',
   'PaystackService',
   'SafehavenService',
@@ -74,6 +72,10 @@ for (const channel of ['paystack', 'safehaven', 'seerbit', 'opay', 'mono', 'monn
   if (!pkg.PAYBA3_CHANNELS.includes(channel)) {
     throw new Error('Missing channel: ' + channel);
   }
+}
+const payba3 = pkg.createPayba3();
+if (payba3.use('paystack').constructor.name !== 'PaystackService') {
+  throw new Error('createPayba3 did not create PaystackService');
 }
 const llmDocs = [
   '${packageName}/llms.txt',

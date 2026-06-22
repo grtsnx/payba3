@@ -1,4 +1,18 @@
-export type MonoEnvironment = 'sandbox' | 'live';
+export type MonoEnvironment =
+  | 'sandbox'
+  | 'live'
+  | 'development'
+  | 'production'
+  | 'test'
+  | 'provision';
+
+export type NormalizedMonoEnvironment = 'sandbox' | 'live';
+
+export type MonoServiceOptions = {
+  environment?: MonoEnvironment;
+  baseUrl?: string;
+  secretKey?: string;
+};
 
 export type MonoHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 

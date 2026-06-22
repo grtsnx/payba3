@@ -1,4 +1,12 @@
-export type OPayEnvironment = 'sandbox' | 'live';
+export type OPayEnvironment =
+  | 'sandbox'
+  | 'live'
+  | 'development'
+  | 'production'
+  | 'test'
+  | 'provision';
+
+export type NormalizedOPayEnvironment = 'sandbox' | 'live';
 
 export type OPayHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -10,7 +18,16 @@ export type OPayCredentials = {
   secretKey: string;
 };
 
-export type OPayBaseUrls = Record<OPayEnvironment, string>;
+export type OPayServiceOptions = {
+  environment?: OPayEnvironment;
+  baseUrl?: string;
+  credentials?: Partial<OPayCredentials>;
+  merchantId?: string;
+  publicKey?: string;
+  secretKey?: string;
+};
+
+export type OPayBaseUrls = Record<NormalizedOPayEnvironment, string>;
 
 export type OPayAmount = {
   total: number;

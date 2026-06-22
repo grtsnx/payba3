@@ -1,8 +1,31 @@
-export type SafehavenEnvironment = 'sandbox' | 'live';
+export type SafehavenEnvironment =
+  | 'sandbox'
+  | 'live'
+  | 'development'
+  | 'production'
+  | 'test'
+  | 'provision';
+
+export type NormalizedSafehavenEnvironment = 'sandbox' | 'live';
 
 export type SafehavenHttpMethod = 'GET' | 'POST';
 
-export type SafehavenBaseUrls = Record<SafehavenEnvironment, string>;
+export type SafehavenServiceOptions = {
+  environment?: SafehavenEnvironment;
+  baseUrl?: string;
+  credentials?: Partial<SafehavenCredentials>;
+  clientId?: string;
+  clientAssertion?: string;
+  timeoutMs?: number;
+  isProduction?: boolean;
+};
+
+export type SafehavenCredentials = {
+  clientId: string;
+  clientAssertion: string;
+};
+
+export type SafehavenBaseUrls = Record<NormalizedSafehavenEnvironment, string>;
 
 export type SafehavenTokenResponse = {
   access_token: string;

@@ -118,6 +118,28 @@ describe('PaystackService', () => {
     });
   });
 
+  it('uses explicit constructor options for base URL, secret key, and preferred bank', async () => {
+    const service = new PaystackService({
+      baseUrl: 'https://paystack.example.test///',
+      secretKey: 'option-paystack-secret',
+      preferredBank: 'option-bank',
+    });
+
+    await service.createDedicatedAccount('CUS_123');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://paystack.example.test/dedicated_account',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(getFetchHeaders(0)).toMatchObject({
+      Authorization: 'Bearer option-paystack-secret',
+    });
+    expect(getFetchBody(0)).toEqual({
+      customer: 'CUS_123',
+      preferred_bank: 'option-bank',
+    });
+  });
+
   it('creates and retrieves dedicated accounts with correct identifiers', async () => {
     process.env.PAYSTACK_SECRET_KEY = 'test-secret';
     const service = new PaystackService();

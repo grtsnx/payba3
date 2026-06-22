@@ -1,46 +1,16 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { Payba3Error, type Payba3ErrorBody } from './payba3-error';
 
-export type HandleResponseBody = {
-  statusCode: number;
-  statusType: string;
-  message: string;
-  data?: unknown;
-};
+export type HandleResponseBody = Payba3ErrorBody;
 
-export class handleResponse extends HttpException {
+export class handleResponse extends Payba3Error {
   constructor(
     public statusCode: number,
     public message: string,
     public data?: unknown,
   ) {
-    const response: HandleResponseBody = {
+    super(message, {
       statusCode,
-      statusType: HttpStatus[statusCode],
-      message,
-    };
-
-    if (data !== undefined) {
-      response.data = data;
-    }
-
-    super(response, statusCode);
-  }
-
-  getResponse(): HandleResponseBody {
-    const response: HandleResponseBody = {
-      statusCode: this.getStatus(),
-      statusType: HttpStatus[this.getStatus()],
-      message: this.message,
-    };
-
-    if (this.data !== undefined) {
-      response.data = this.data;
-    }
-
-    return response;
-  }
-
-  getStatus(): number {
-    return this.statusCode;
+      data,
+    });
   }
 }

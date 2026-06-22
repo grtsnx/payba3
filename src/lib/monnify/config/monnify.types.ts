@@ -1,4 +1,12 @@
-export type MonnifyEnvironment = 'sandbox' | 'live';
+export type MonnifyEnvironment =
+  | 'sandbox'
+  | 'live'
+  | 'development'
+  | 'production'
+  | 'test'
+  | 'provision';
+
+export type NormalizedMonnifyEnvironment = 'sandbox' | 'live';
 
 export type MonnifyHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -8,7 +16,16 @@ export type MonnifyCredentials = {
   contractCode: string;
 };
 
-export type MonnifyBaseUrls = Record<MonnifyEnvironment, string>;
+export type MonnifyServiceOptions = {
+  environment?: MonnifyEnvironment;
+  baseUrl?: string;
+  credentials?: Partial<MonnifyCredentials>;
+  apiKey?: string;
+  secretKey?: string;
+  contractCode?: string;
+};
+
+export type MonnifyBaseUrls = Record<NormalizedMonnifyEnvironment, string>;
 
 export type MonnifyTokenCache = {
   accessToken: string;

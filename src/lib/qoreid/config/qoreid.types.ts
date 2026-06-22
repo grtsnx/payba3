@@ -13,6 +13,14 @@ export type QoreIDCredentials = {
   secret?: string;
 };
 
+export type QoreIDServiceOptions = {
+  environment?: QoreIDEnvironment;
+  baseUrl?: string;
+  credentials?: QoreIDCredentials;
+  clientId?: string;
+  secret?: string;
+};
+
 export type QoreIDTokenResponse = {
   accessToken?: string;
   access_token?: string;

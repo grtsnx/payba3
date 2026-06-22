@@ -58,6 +58,23 @@ describe('MonoService', () => {
     });
   });
 
+  it('uses explicit constructor options for base URL and secret key', async () => {
+    const service = new MonoService({
+      baseUrl: 'https://mono.example.test///',
+      secretKey: 'option-mono-secret',
+    });
+
+    await service.verifyPayment('pay-ref');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://mono.example.test/v2/payments/verify/pay-ref',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(getFetchHeaders(0)).toMatchObject({
+      'mono-sec-key': 'option-mono-secret',
+    });
+  });
+
   it('builds account-linking, token-exchange, and account-data requests', async () => {
     const service = new MonoService();
 

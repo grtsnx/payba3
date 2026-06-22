@@ -38,6 +38,8 @@ export const envValidationSchema = Joi.object({
     then: Joi.string().required(),
     otherwise: Joi.string().optional().allow(''),
   }),
+  SAFEHAVEN_LIVE_CLIENT_ID: Joi.string().optional().allow(''),
+  SAFEHAVEN_LIVE_CLIENT_ASSERTION: Joi.string().optional().allow(''),
   OPAY_ENVIRONMENT: Joi.string().valid('sandbox', 'live').default('sandbox'),
   OPAY_BASE_URL: Joi.string().uri().optional().allow(''),
   OPAY_MERCHANT_ID: Joi.string().optional().allow(''),

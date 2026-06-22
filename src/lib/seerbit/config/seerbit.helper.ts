@@ -1,14 +1,14 @@
 import {
-  BadGatewayException,
-  HttpStatus,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { handleResponse } from '../../shared/response.helper';
+  getPayba3ErrorMessage,
+  handleResponse,
+  PAYBA3_HTTP_STATUS,
+} from '../../shared';
 import type {
   SeerbitBaseUrls,
   SeerbitCredentials,
   SeerbitEncryptedKeyResponse,
   SeerbitEnvironment,
+  NormalizedSeerbitEnvironment,
   SeerbitRequestContext,
   SeerbitRequestOptions,
 } from './seerbit.types';
@@ -20,22 +20,30 @@ export const SEERBIT_BASE_URLS: SeerbitBaseUrls = {
 
 export const SEERBIT_BASE_URL = SEERBIT_BASE_URLS.sandbox;
 
+export const normalizeSeerbitEnvironment = (
+  environment?: string,
+): NormalizedSeerbitEnvironment =>
+  environment === 'live' || environment === 'production' ? 'live' : 'sandbox';
+
 export const getSeerbitBaseUrl = (
   environment: SeerbitEnvironment,
   baseUrlOverride?: string,
 ): string =>
-  (baseUrlOverride ?? SEERBIT_BASE_URLS[environment]).replace(/\/+$/, '');
+  (
+    baseUrlOverride ??
+    SEERBIT_BASE_URLS[normalizeSeerbitEnvironment(environment)]
+  ).replace(/\/+$/, '');
 
 export const getSeerbitCredentials = (
   environment: SeerbitEnvironment,
 ): SeerbitCredentials => ({
   publicKey:
-    (environment === 'live'
+    (normalizeSeerbitEnvironment(environment) === 'live'
       ? process.env.SEERBIT_LIVE_PUBLIC_KEY
       : process.env.SEERBIT_PUBLIC_KEY
     )?.trim() ?? '',
   secretKey:
-    (environment === 'live'
+    (normalizeSeerbitEnvironment(environment) === 'live'
       ? process.env.SEERBIT_LIVE_SECRET_KEY
       : process.env.SEERBIT_SECRET_KEY
     )?.trim() ?? '',
@@ -78,7 +86,10 @@ export const assertSeerbitKeys = (
   secretKey: string,
 ): void => {
   if (!publicKey || !secretKey) {
-    throw new InternalServerErrorException('Seerbit secret keys not set');
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Seerbit secret keys not set',
+    );
   }
 };
 
@@ -95,17 +106,20 @@ export const requestSeerbit = async <T>({
       buildSeerbitRequestInit(options),
     );
   } catch (error) {
-    throw new BadGatewayException({
-      message: 'Seerbit request failed',
-      data: error instanceof Error ? error.message : undefined,
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'Seerbit request failed',
+      {
+        data: getPayba3ErrorMessage(error, 'Seerbit request failed'),
+      },
+    );
   }
 
   const body = await parseSeerbitResponse(response);
 
   if (!response.ok) {
     throw new handleResponse(
-      HttpStatus.BAD_REQUEST,
+      PAYBA3_HTTP_STATUS.BAD_REQUEST,
       'Seerbit request failed',
       body,
     );
@@ -134,7 +148,7 @@ export const generateSeerbitBearerToken = async (
 
   if (response.status !== 'SUCCESS' || !encryptedKey) {
     throw new handleResponse(
-      HttpStatus.BAD_REQUEST,
+      PAYBA3_HTTP_STATUS.BAD_REQUEST,
       'Failed to obtain Seerbit bearer token',
       response,
     );

@@ -58,9 +58,9 @@ payba3/
 ├── src/
 │   ├── app/                       # Minimal app shell and health endpoint
 │   ├── lib/                       # payba3 provider integrations
-│   │   ├── payba3.service.ts      # One entry point for selecting a provider
+│   │   ├── payba3.service.ts      # Framework-neutral client/factory surface
 │   │   ├── payba3.types.ts        # Shared payba3 channel types
-│   │   ├── lib.module.ts          # Provider registration module
+│   │   ├── lib.module.ts          # Optional local Nest demo registration module
 │   │   ├── shared/                # Provider-safe shared helpers
 │   │   ├── paystack/              # Paystack channel
 │   │   ├── safehaven/             # Safehaven channel
@@ -97,7 +97,7 @@ src/lib/<provider>/
 ├── config/
 │   ├── <provider>.helper.ts       # Auth, signing, token refresh, fetch, parsing
 │   └── <provider>.types.ts        # Provider payloads, responses, request context
-├── <provider>.module.ts           # Provider registration
+├── <provider>.module.ts           # Optional local Nest demo registration
 ├── <provider>.service.ts          # Developer-facing provider actions
 └── <provider>_llm.txt             # Provider docs for agents/LLMs
 ```

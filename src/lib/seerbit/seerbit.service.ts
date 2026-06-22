@@ -1,33 +1,45 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { handleResponse } from '../shared/response.helper';
+import { handleResponse, PAYBA3_HTTP_STATUS } from '../shared';
 import {
   assertSeerbitKeys,
   generateSeerbitBearerToken,
   getSeerbitBaseUrl,
   getSeerbitCredentials,
+  normalizeSeerbitEnvironment,
   requestSeerbit,
 } from './config/seerbit.helper';
 import type {
   SeerbitCreateVirtualAccountInput,
   SeerbitCreateVirtualAccountResult,
   SeerbitEnvironment,
+  SeerbitServiceOptions,
 } from './config/seerbit.types';
 
-@Injectable()
 export class SeerbitService {
   private readonly baseUrl: string;
   private readonly publicKey: string;
   private readonly secretKey: string;
   private bearerToken: string | null = null;
 
-  constructor() {
-    const environment = (process.env.SEERBIT_ENVIRONMENT ??
-      'sandbox') as SeerbitEnvironment;
+  constructor(options: SeerbitServiceOptions = {}) {
+    const environment = normalizeSeerbitEnvironment(
+      options.environment ??
+        process.env.SEERBIT_ENVIRONMENT ??
+        process.env.NODE_ENV,
+    ) as SeerbitEnvironment;
     const credentials = getSeerbitCredentials(environment);
 
-    this.baseUrl = getSeerbitBaseUrl(environment, process.env.SEERBIT_BASE_URL);
-    this.publicKey = credentials.publicKey;
-    this.secretKey = credentials.secretKey;
+    this.baseUrl = getSeerbitBaseUrl(
+      environment,
+      options.baseUrl ?? process.env.SEERBIT_BASE_URL,
+    );
+    this.publicKey =
+      options.publicKey ??
+      options.credentials?.publicKey ??
+      credentials.publicKey;
+    this.secretKey =
+      options.secretKey ??
+      options.credentials?.secretKey ??
+      credentials.secretKey;
   }
 
   async getBearerToken(): Promise<string> {
@@ -68,7 +80,7 @@ export class SeerbitService {
 
     if (body.status !== 'SUCCESS' || !body.data?.payments?.accountNumber) {
       throw new handleResponse(
-        HttpStatus.BAD_REQUEST,
+        PAYBA3_HTTP_STATUS.BAD_REQUEST,
         body.data?.message ?? 'Failed to create Seerbit virtual account',
         body,
       );

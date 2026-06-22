@@ -8,6 +8,13 @@ export type PaystackEnvironment =
 
 export type NormalizedPaystackEnvironment = 'sandbox' | 'live';
 
+export type PaystackServiceOptions = {
+  environment?: PaystackEnvironment;
+  baseUrl?: string;
+  secretKey?: string;
+  preferredBank?: string;
+};
+
 export type PaystackHttpMethod = 'GET' | 'POST' | 'DELETE';
 
 export type PaystackRequestOptions = {

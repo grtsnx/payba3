@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
 import {
   buildMonoQuery,
   getMonoBaseUrl,
   getMonoSecretKey,
+  normalizeMonoEnvironment,
   requestMono,
 } from './config/mono.helper';
 import type {
@@ -13,19 +13,22 @@ import type {
   MonoInitiatePaymentInput,
   MonoRequestOptions,
   MonoResponse,
+  MonoServiceOptions,
 } from './config/mono.types';
 
-@Injectable()
 export class MonoService {
   private readonly baseUrl: string;
   private readonly secretKey: string;
 
-  constructor() {
-    const environment = (process.env.MONO_ENVIRONMENT ??
-      'sandbox') as MonoEnvironment;
+  constructor(options: MonoServiceOptions = {}) {
+    const environment = normalizeMonoEnvironment(
+      options.environment ??
+        process.env.MONO_ENVIRONMENT ??
+        process.env.NODE_ENV,
+    ) as MonoEnvironment;
 
-    this.baseUrl = getMonoBaseUrl(process.env.MONO_BASE_URL);
-    this.secretKey = getMonoSecretKey(environment) ?? '';
+    this.baseUrl = getMonoBaseUrl(options.baseUrl ?? process.env.MONO_BASE_URL);
+    this.secretKey = options.secretKey ?? getMonoSecretKey(environment) ?? '';
   }
 
   async request<T = unknown>(

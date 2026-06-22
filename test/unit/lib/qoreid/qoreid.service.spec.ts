@@ -123,4 +123,58 @@ describe('QoreIDService', () => {
       secret: 'live-secret',
     });
   });
+
+  it('uses explicit constructor options without reading env credentials', async () => {
+    const service = new QoreIDService({
+      baseUrl: 'https://qoreid-options.example.test///',
+      clientId: 'option-client',
+      secret: 'option-secret',
+    });
+
+    await service.createSession({ customerReference: 'customer-ref' });
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://qoreid-options.example.test/token',
+    );
+    expect(getFetchBody(0)).toEqual({
+      clientId: 'option-client',
+      secret: 'option-secret',
+    });
+  });
+
+  it('refreshes expired access tokens before later verification calls', async () => {
+    fetchMock.mockReset();
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          accessToken: 'expired-qore-token',
+          expiresIn: 1,
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ status: true, data: {} }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          accessToken: 'fresh-qore-token',
+          expiresIn: 120,
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ status: true, data: {} }));
+    const service = new QoreIDService({
+      clientId: 'qore-client',
+      secret: 'qore-secret',
+    });
+
+    await service.createSession({ customerReference: 'customer-ref' });
+    await service.verifyCacNumber('RC654321');
+
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      `${QOREID_BASE_URLS.sandbox}/token`,
+      `${QOREID_BASE_URLS.sandbox}/v1/sessions`,
+      `${QOREID_BASE_URLS.sandbox}/token`,
+      `${QOREID_BASE_URLS.sandbox}/v1/ng/identities/cac-basic`,
+    ]);
+    expect(getFetchHeaders(3)).toMatchObject({
+      authorization: 'Bearer fresh-qore-token',
+    });
+  });
 });

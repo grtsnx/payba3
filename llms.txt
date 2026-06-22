@@ -14,15 +14,15 @@ payba3 is a developer-first integration surface for multiple payment and verific
 
 ## Integration Rules
 
-- Import payba3 from `@grtsnx/payba3` and select providers with `Payba3Service.use('<provider>')`.
+- Import `createPayba3` from `@grtsnx/payba3`, create a client, and select providers with `payba3.use('<provider>')`.
+- payba3 2.x is framework-neutral and has no Nest runtime peer dependency.
 - Configure only the provider you use.
+- Prefer explicit `createPayba3({ provider: { ...config } })` options when generating code; environment variables remain supported.
 - Use provider-specific environment switches such as `SAFEHAVEN_ENVIRONMENT`, `OPAY_ENVIRONMENT`, `MONNIFY_ENVIRONMENT`, `PAYSTACK_ENVIRONMENT`, `QOREID_ENVIRONMENT`, and `SEERBIT_ENVIRONMENT`.
 - Keep secrets server-side.
 - Verify provider webhooks before trusting callback payloads.
 - Verify transaction status server-side before delivering value.
 - Refresh expiring access tokens before they expire.
-- payba3 is Nest-native in `1.x`; core Nest packages are peer dependencies to avoid duplicate Nest runtimes.
-- Most package managers install peer dependencies automatically; manually install `@nestjs/common`, `@nestjs/core`, `@nestjs/config`, `reflect-metadata`, and `rxjs` only when the host toolchain asks for them.
 - For IDE and AI-agent use, read `@grtsnx/payba3/llms.txt`, then read the provider-specific `@grtsnx/payba3/llms/<provider>.txt` file before generating integration code.
 - Agents must generate server-side code only, keep secrets in environment variables, and never expose provider keys to client-side code.
 - Validate package readiness with `bun run pack:dry`, `bun run test:package`, and `bun run test:package:bun`.

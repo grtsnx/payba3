@@ -1,9 +1,8 @@
 import {
-  BadGatewayException,
-  HttpStatus,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { handleResponse } from '../../shared/response.helper';
+  getPayba3ErrorMessage,
+  handleResponse,
+  PAYBA3_HTTP_STATUS,
+} from '../../shared';
 import type {
   NormalizedQoreIDEnvironment,
   QoreIDCacLevel,
@@ -104,13 +103,14 @@ export const getQoreIDExpiresInFromResponse = (
   response.expiresIn ?? response.expires_in ?? DEFAULT_TOKEN_TTL_SECONDS;
 
 export const getQoreIDErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : 'QoreID request failed';
+  getPayba3ErrorMessage(error, 'QoreID request failed');
 
 export const assertQoreIDCredentials = (
   credentials: QoreIDCredentials,
 ): Required<QoreIDCredentials> => {
   if (!credentials.clientId || !credentials.secret) {
-    throw new InternalServerErrorException(
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'QoreID credentials are not configured',
     );
   }
@@ -134,17 +134,20 @@ export const requestQoreID = async <T>({
       buildQoreIDRequestInit(options),
     );
   } catch (error) {
-    throw new BadGatewayException({
-      message: 'QoreID request failed',
-      data: getQoreIDErrorMessage(error),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'QoreID request failed',
+      {
+        data: getQoreIDErrorMessage(error),
+      },
+    );
   }
 
   const body = await parseQoreIDResponse(response);
 
   if (!response.ok) {
     throw new handleResponse(
-      HttpStatus.INTERNAL_SERVER_ERROR,
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'An error occurred with the verification service',
       body,
     );
@@ -172,7 +175,7 @@ export const fetchQoreIDToken = async (
 
   if (!isQoreIDTokenResponse(response)) {
     throw new handleResponse(
-      HttpStatus.INTERNAL_SERVER_ERROR,
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Invalid response from QoreID token endpoint',
       response,
     );
@@ -182,7 +185,7 @@ export const fetchQoreIDToken = async (
 
   if (!accessToken) {
     throw new handleResponse(
-      HttpStatus.INTERNAL_SERVER_ERROR,
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Invalid response from QoreID token endpoint',
       response,
     );

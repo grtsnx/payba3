@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  One payment integration surface for many payment channels.
+  Framework-neutral payment integration surface for many payment channels.
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@
 
 # payba3
 
-payba3 is an open-source collection of payment-channel integrations built for developers, teams, codebases, automations, and AI agents that need a simple way to plug into different payment providers.
+payba3 is an open-source collection of payment-channel integrations built for developers, teams, codebases, automations, and AI agents that need a simple way to plug into different payment providers from server-side TypeScript or JavaScript.
 
 Configure the provider you want, select it through payba3, and call the channel.
 
@@ -50,15 +50,15 @@ Use payba3 when you want:
 
 ## Supported Channels
 
-| Channel | Common use cases | Provider signup | Provider docs |
-| --- | --- | --- | --- |
-| Paystack | Checkout, subscriptions, transfers, dedicated accounts | [Create account](https://paystack.com/developers) | [Docs](https://paystack.com/docs/api/) |
-| Safehaven | Virtual accounts, subaccounts, banking APIs | [Sandbox](https://online.sandbox.safehavenmfb.com) | [Docs](https://safehavenmfb.readme.io/reference/introduction) |
-| SeerBit | Collections, virtual accounts, online payments | [Create account](https://www.seerbit.com/developers) | [Docs](https://doc.seerbit.com/) |
-| OPay | Checkout, signed payment APIs, refunds | [Merchant dashboard](https://merchant.opaycheckout.com) | [Docs](https://doc.opaycheckout.com/payment-authentication) |
-| Mono | Open banking, account linking, DirectPay, lookup | [Create account](https://mono.co/signup) | [Docs](https://docs.mono.co/docs/quickstart) |
-| Monnify | Checkout, reserved accounts, transfers, wallets | [Create account](https://app.monnify.com/create-account) | [Docs](https://developers.monnify.com/docs/collections/quickstart) |
-| QoreID | KYC, CAC lookup, identity verification | [Create account](https://dashboard.qoreid.com/dashboard) | [Docs](https://docs.qoreid.com/) |
+| Channel   | Common use cases                                       | Provider signup                                          | Provider docs                                                      |
+| --------- | ------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------ |
+| Paystack  | Checkout, subscriptions, transfers, dedicated accounts | [Create account](https://paystack.com/developers)        | [Docs](https://paystack.com/docs/api/)                             |
+| Safehaven | Virtual accounts, subaccounts, banking APIs            | [Sandbox](https://online.sandbox.safehavenmfb.com)       | [Docs](https://safehavenmfb.readme.io/reference/introduction)      |
+| SeerBit   | Collections, virtual accounts, online payments         | [Create account](https://www.seerbit.com/developers)     | [Docs](https://doc.seerbit.com/)                                   |
+| OPay      | Checkout, signed payment APIs, refunds                 | [Merchant dashboard](https://merchant.opaycheckout.com)  | [Docs](https://doc.opaycheckout.com/payment-authentication)        |
+| Mono      | Open banking, account linking, DirectPay, lookup       | [Create account](https://mono.co/signup)                 | [Docs](https://docs.mono.co/docs/quickstart)                       |
+| Monnify   | Checkout, reserved accounts, transfers, wallets        | [Create account](https://app.monnify.com/create-account) | [Docs](https://developers.monnify.com/docs/collections/quickstart) |
+| QoreID    | KYC, CAC lookup, identity verification                 | [Create account](https://dashboard.qoreid.com/dashboard) | [Docs](https://docs.qoreid.com/)                                   |
 
 ## Installation
 
@@ -82,15 +82,9 @@ payba3 ships compiled JavaScript, TypeScript declarations, and an npm exports ma
 
 ### Runtime Requirements
 
-payba3 is Nest-native today. The core Nest runtime packages are peer dependencies so Nest applications do not end up with duplicate Nest runtimes.
+payba3 2.x is framework-neutral. It does not require Nest, Express, Fastify, Next.js, or any other framework package to import or use the provider clients.
 
-Most modern package managers install peer dependencies automatically or show a clear peer warning. Existing Nest apps usually already have these packages. Only install them manually if your package manager asks for them:
-
-```bash
-npm install @nestjs/common @nestjs/core @nestjs/config reflect-metadata rxjs
-```
-
-If you want payba3 without Nest at all, that should be a separate framework-neutral package layer, for example `@grtsnx/payba3-core`, with this package acting as the Nest adapter. Keeping the current package Nest-native is intentional for `1.x`.
+Use it in server-side JavaScript or TypeScript with a runtime that provides `fetch`, `URLSearchParams`, and Node-compatible crypto APIs. Node.js 18+ and Bun are covered by package smoke tests.
 
 If you are using the repository directly:
 
@@ -100,38 +94,43 @@ bun install
 
 ## Quick Usage
 
-Register payba3 in your application, then use `Payba3Service` to select a channel.
+Create a payba3 client, configure the providers you want, then select a channel.
 
 ```ts
-import { Payba3Service } from '@grtsnx/payba3';
+import { createPayba3 } from '@grtsnx/payba3';
 
-export class Payments {
-  constructor(private readonly payba3: Payba3Service) {}
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+  safehaven: {
+    environment: 'sandbox',
+    clientId: process.env.SAFEHAVEN_CLIENT_ID,
+    clientAssertion: process.env.SAFEHAVEN_CLIENT_ASSERTION,
+  },
+});
 
-  async collectWithPaystack() {
-    return this.payba3.use('paystack').initializeOneTimeCheckout({
-      email: 'customer@example.com',
-      amountInKobo: 250000,
-      currency: 'NGN',
-      reference: 'order_123',
-    });
-  }
+const checkout = await payba3.use('paystack').initializeOneTimeCheckout({
+  email: 'customer@example.com',
+  amountInKobo: 250000,
+  currency: 'NGN',
+  reference: 'order_123',
+});
 
-  async createSafehavenSubAccount() {
-    return this.payba3.use('safehaven').createSubAccount({
-      phoneNumber: '08000000000',
-      identityType: 'vID',
-      identityId: 'identity-id',
-      emailAddress: 'customer@example.com',
-      externalReference: 'customer_123',
-    });
-  }
-}
+const subAccount = await payba3.use('safehaven').createSubAccount({
+  phoneNumber: '08000000000',
+  identityType: 'vID',
+  identityId: 'identity-id',
+  emailAddress: 'customer@example.com',
+  externalReference: 'customer_123',
+});
 ```
 
 You can also use a channel directly when you want provider-specific methods:
 
 ```ts
+const monnify = payba3.use('monnify');
+
 await monnify.createReservedAccount({
   accountReference: 'customer_123',
   accountName: 'Jane Doe',
@@ -144,6 +143,23 @@ await monnify.createReservedAccount({
 ## Configuration
 
 Only configure the providers you use. Missing credentials for unused providers should not block your application from starting.
+
+You can configure providers through `createPayba3()` options, environment variables, or a mix of both. Explicit constructor options win over environment variables.
+
+```ts
+const payba3 = createPayba3({
+  monnify: {
+    environment: 'live',
+    apiKey: process.env.MONNIFY_LIVE_API_KEY,
+    secretKey: process.env.MONNIFY_LIVE_SECRET_KEY,
+    contractCode: process.env.MONNIFY_LIVE_CONTRACT_CODE,
+  },
+  qoreid: {
+    clientId: process.env.QOREID_CLIENT,
+    secret: process.env.QOREID_SECRET,
+  },
+});
+```
 
 ### Paystack
 
@@ -159,6 +175,8 @@ PAYSTACK_SECRET_KEY_LIVE=
 SAFEHAVEN_ENVIRONMENT=sandbox
 SAFEHAVEN_CLIENT_ID=
 SAFEHAVEN_CLIENT_ASSERTION=
+SAFEHAVEN_LIVE_CLIENT_ID=
+SAFEHAVEN_LIVE_CLIENT_ASSERTION=
 SAFEHAVEN_TIMEOUT_MS=10000
 ```
 
@@ -312,7 +330,7 @@ Verify transactions server-side before marking an order paid.
 For AI tool servers, expose small provider actions instead of exposing raw secrets:
 
 ```ts
-import { Payba3Service, type Payba3ChannelName } from '@grtsnx/payba3';
+import { createPayba3, type Payba3ChannelName } from '@grtsnx/payba3';
 
 type PaymentToolInput = {
   channel: Payba3ChannelName;
@@ -320,11 +338,15 @@ type PaymentToolInput = {
   payload: Record<string, unknown>;
 };
 
-export class PaymentTool {
-  constructor(private readonly payba3: Payba3Service) {}
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
 
+export class PaymentTool {
   async run(input: PaymentToolInput) {
-    const provider = this.payba3.use(input.channel);
+    const provider = payba3.use(input.channel);
 
     if (input.channel === 'paystack' && input.action === 'initializeCheckout') {
       return provider.initializeOneTimeCheckout({

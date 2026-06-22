@@ -1,15 +1,15 @@
-import {
-  BadGatewayException,
-  HttpStatus,
-  InternalServerErrorException,
-} from '@nestjs/common';
 import * as crypto from 'crypto';
-import { handleResponse } from '../../shared/response.helper';
+import {
+  getPayba3ErrorMessage,
+  handleResponse,
+  PAYBA3_HTTP_STATUS,
+} from '../../shared';
 import type {
   MonnifyAuthResponse,
   MonnifyBaseUrls,
   MonnifyCredentials,
   MonnifyEnvironment,
+  NormalizedMonnifyEnvironment,
   MonnifyResponse,
   MonnifyRequestContext,
   MonnifyRequestOptions,
@@ -24,27 +24,35 @@ export const MONNIFY_BASE_URLS: MonnifyBaseUrls = {
   live: 'https://api.monnify.com',
 };
 
+export const normalizeMonnifyEnvironment = (
+  environment?: string,
+): NormalizedMonnifyEnvironment =>
+  environment === 'live' || environment === 'production' ? 'live' : 'sandbox';
+
 export const getMonnifyBaseUrl = (
   environment: MonnifyEnvironment,
   baseUrlOverride?: string,
 ): string =>
-  (baseUrlOverride ?? MONNIFY_BASE_URLS[environment]).replace(/\/+$/, '');
+  (
+    baseUrlOverride ??
+    MONNIFY_BASE_URLS[normalizeMonnifyEnvironment(environment)]
+  ).replace(/\/+$/, '');
 
 export const getMonnifyCredentials = (
   environment: MonnifyEnvironment,
 ): MonnifyCredentials => ({
   apiKey:
-    (environment === 'live'
+    (normalizeMonnifyEnvironment(environment) === 'live'
       ? process.env.MONNIFY_LIVE_API_KEY
       : process.env.MONNIFY_API_KEY
     )?.trim() ?? '',
   secretKey:
-    (environment === 'live'
+    (normalizeMonnifyEnvironment(environment) === 'live'
       ? process.env.MONNIFY_LIVE_SECRET_KEY
       : process.env.MONNIFY_SECRET_KEY
     )?.trim() ?? '',
   contractCode:
-    (environment === 'live'
+    (normalizeMonnifyEnvironment(environment) === 'live'
       ? process.env.MONNIFY_LIVE_CONTRACT_CODE
       : process.env.MONNIFY_CONTRACT_CODE
     )?.trim() ?? '',
@@ -54,7 +62,8 @@ export const assertMonnifyCredentials = (
   credentials: MonnifyCredentials,
 ): void => {
   if (!credentials.apiKey || !credentials.secretKey) {
-    throw new InternalServerErrorException(
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'MONNIFY_API_KEY and MONNIFY_SECRET_KEY are required',
     );
   }
@@ -62,7 +71,8 @@ export const assertMonnifyCredentials = (
 
 export const assertMonnifySecretKey = (secretKey: string): string => {
   if (!secretKey) {
-    throw new InternalServerErrorException(
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'MONNIFY_SECRET_KEY is not configured',
     );
   }
@@ -72,7 +82,8 @@ export const assertMonnifySecretKey = (secretKey: string): string => {
 
 export const assertMonnifyContractCode = (contractCode: string): string => {
   if (!contractCode) {
-    throw new InternalServerErrorException(
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'MONNIFY_CONTRACT_CODE is not configured',
     );
   }
@@ -129,7 +140,7 @@ export const parseMonnifyResponse = async (
 };
 
 export const getMonnifyErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : 'Monnify request failed';
+  getPayba3ErrorMessage(error, 'Monnify request failed');
 
 export const isMonnifyResponse = (value: unknown): value is MonnifyResponse =>
   typeof value === 'object' &&
@@ -139,7 +150,7 @@ export const isMonnifyResponse = (value: unknown): value is MonnifyResponse =>
 
 export const throwMonnifyResponseError = (body: MonnifyResponse): never => {
   throw new handleResponse(
-    HttpStatus.BAD_REQUEST,
+    PAYBA3_HTTP_STATUS.BAD_REQUEST,
     body.responseMessage || 'Monnify request failed',
     body,
   );
@@ -158,17 +169,20 @@ export const requestMonnify = async <T = unknown>({
       buildMonnifyRequestInit(options),
     );
   } catch (error) {
-    throw new BadGatewayException({
-      message: 'Monnify request failed',
-      data: getMonnifyErrorMessage(error),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'Monnify request failed',
+      {
+        data: getMonnifyErrorMessage(error),
+      },
+    );
   }
 
   const body = await parseMonnifyResponse(response);
 
   if (!response.ok) {
     throw new handleResponse(
-      HttpStatus.BAD_REQUEST,
+      PAYBA3_HTTP_STATUS.BAD_REQUEST,
       'Monnify request failed',
       body,
     );
@@ -207,17 +221,20 @@ export const fetchMonnifyToken = async (
       redirect: 'error',
     });
   } catch (error) {
-    throw new BadGatewayException({
-      message: 'Monnify token request failed',
-      data: getMonnifyErrorMessage(error),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'Monnify token request failed',
+      {
+        data: getMonnifyErrorMessage(error),
+      },
+    );
   }
 
   const body = (await parseMonnifyResponse(response)) as MonnifyAuthResponse;
 
   if (!response.ok || !body.responseBody?.accessToken) {
     throw new handleResponse(
-      HttpStatus.BAD_REQUEST,
+      PAYBA3_HTTP_STATUS.BAD_REQUEST,
       'Failed to obtain Monnify access token',
       body,
     );

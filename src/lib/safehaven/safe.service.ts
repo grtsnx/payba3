@@ -1,22 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   buildSafehavenTokenPayload,
   createSafehavenTokenCache,
   getSafehavenBaseUrl,
   getSafehavenClientHeaderValue,
+  getSafehavenCredentials,
   getValidSafehavenToken,
+  normalizeSafehavenEnvironment,
   requestSafehaven,
 } from './config/safe.helper';
 import type {
   CreateSafehavenSubAccountPayload,
   SafehavenEnvironment,
+  SafehavenServiceOptions,
   SafehavenSubAccountResponse,
   SafehavenTokenCache,
   SafehavenTokenResponse,
 } from './config/safe.types';
 
-@Injectable()
 export class SafehavenService {
   private readonly baseUrl: string;
   private readonly clientId: string;
@@ -25,26 +25,32 @@ export class SafehavenService {
   private readonly timeoutMs: number;
   private token?: SafehavenTokenCache;
 
-  constructor(private readonly configService: ConfigService) {
-    this.isProduction =
-      this.configService.get<string>('NODE_ENV', 'development') ===
-      'production';
-    const environment = this.configService.get<SafehavenEnvironment>(
-      'SAFEHAVEN_ENVIRONMENT',
-      'sandbox',
-    );
+  constructor(options: SafehavenServiceOptions = {}) {
+    const environment = normalizeSafehavenEnvironment(
+      options.environment ??
+        process.env.SAFEHAVEN_ENVIRONMENT ??
+        process.env.NODE_ENV,
+    ) as SafehavenEnvironment;
+    const credentials = getSafehavenCredentials(environment);
 
+    this.isProduction =
+      options.isProduction ?? process.env.NODE_ENV === 'production';
     this.baseUrl = getSafehavenBaseUrl(
       environment,
-      this.configService.get<string>('SAFEHAVEN_BASE_URL'),
+      options.baseUrl ?? process.env.SAFEHAVEN_BASE_URL,
     );
-    this.clientId = this.configService.get<string>('SAFEHAVEN_CLIENT_ID') ?? '';
+    this.clientId =
+      options.clientId ??
+      options.credentials?.clientId ??
+      credentials.clientId ??
+      '';
     this.clientAssertion =
-      this.configService.get<string>('SAFEHAVEN_CLIENT_ASSERTION') ?? '';
-    this.timeoutMs = this.configService.get<number>(
-      'SAFEHAVEN_TIMEOUT_MS',
-      10_000,
-    );
+      options.clientAssertion ??
+      options.credentials?.clientAssertion ??
+      credentials.clientAssertion ??
+      '';
+    this.timeoutMs =
+      options.timeoutMs ?? (Number(process.env.SAFEHAVEN_TIMEOUT_MS) || 10_000);
   }
 
   async getAccessToken(): Promise<SafehavenTokenResponse> {

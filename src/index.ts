@@ -1,7 +1,22 @@
-export { LibModule } from './lib/lib.module';
-export { Payba3Service } from './lib/payba3.service';
+export { createPayba3, Payba3Service } from './lib/payba3.service';
 export { PAYBA3_CHANNELS } from './lib/payba3.types';
-export type { Payba3ChannelMap, Payba3ChannelName } from './lib/payba3.types';
+export type {
+  Payba3ChannelMap,
+  Payba3ChannelName,
+  Payba3Config,
+} from './lib/payba3.types';
+export {
+  Payba3Error,
+  PAYBA3_HTTP_STATUS,
+  getPayba3ErrorMessage,
+  getPayba3StatusText,
+} from './lib/shared';
+export type {
+  HandleResponseBody,
+  Payba3ErrorBody,
+  Payba3ErrorOptions,
+  Payba3HttpStatusCode,
+} from './lib/shared';
 
 export { MonoService } from './lib/mono/mono.service';
 export type * from './lib/mono/config/mono.types';

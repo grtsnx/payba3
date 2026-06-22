@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
 import {
   getOPayBaseUrl,
   getOPayCredentials,
+  normalizeOPayEnvironment,
   requestOPay,
   verifyOPayCallbackSignature,
 } from './config/opay.helper';
@@ -13,20 +13,40 @@ import type {
   OPayRefundPayload,
   OPayRequestOptions,
   OPayResponse,
+  OPayServiceOptions,
   OPayStatusPayload,
 } from './config/opay.types';
 
-@Injectable()
 export class OPayService {
   private readonly baseUrl: string;
   private readonly credentials: OPayCredentials;
 
-  constructor() {
-    const environment = (process.env.OPAY_ENVIRONMENT ??
-      'sandbox') as OPayEnvironment;
+  constructor(options: OPayServiceOptions = {}) {
+    const environment = normalizeOPayEnvironment(
+      options.environment ??
+        process.env.OPAY_ENVIRONMENT ??
+        process.env.NODE_ENV,
+    ) as OPayEnvironment;
+    const envCredentials = getOPayCredentials(environment);
 
-    this.baseUrl = getOPayBaseUrl(environment, process.env.OPAY_BASE_URL);
-    this.credentials = getOPayCredentials(environment);
+    this.baseUrl = getOPayBaseUrl(
+      environment,
+      options.baseUrl ?? process.env.OPAY_BASE_URL,
+    );
+    this.credentials = {
+      merchantId:
+        options.merchantId ??
+        options.credentials?.merchantId ??
+        envCredentials.merchantId,
+      publicKey:
+        options.publicKey ??
+        options.credentials?.publicKey ??
+        envCredentials.publicKey,
+      secretKey:
+        options.secretKey ??
+        options.credentials?.secretKey ??
+        envCredentials.secretKey,
+    };
   }
 
   async request<T = unknown>(

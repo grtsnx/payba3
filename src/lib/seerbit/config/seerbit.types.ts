@@ -1,11 +1,27 @@
-export type SeerbitEnvironment = 'sandbox' | 'live';
+export type SeerbitEnvironment =
+  | 'sandbox'
+  | 'live'
+  | 'development'
+  | 'production'
+  | 'test'
+  | 'provision';
+
+export type NormalizedSeerbitEnvironment = 'sandbox' | 'live';
 
 export type SeerbitCredentials = {
   publicKey: string;
   secretKey: string;
 };
 
-export type SeerbitBaseUrls = Record<SeerbitEnvironment, string>;
+export type SeerbitServiceOptions = {
+  environment?: SeerbitEnvironment;
+  baseUrl?: string;
+  credentials?: Partial<SeerbitCredentials>;
+  publicKey?: string;
+  secretKey?: string;
+};
+
+export type SeerbitBaseUrls = Record<NormalizedSeerbitEnvironment, string>;
 
 export type SeerbitCreateVirtualAccountInput = {
   fullName: string;

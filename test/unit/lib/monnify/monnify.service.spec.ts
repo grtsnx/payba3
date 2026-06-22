@@ -118,6 +118,35 @@ describe('MonnifyService', () => {
     });
   });
 
+  it('uses explicit constructor options for base URL and credentials', async () => {
+    const service = new MonnifyService({
+      baseUrl: 'https://monnify.example.test///',
+      apiKey: 'option-api-key',
+      secretKey: 'option-secret-key',
+      contractCode: 'option-contract-code',
+    });
+
+    await service.initializeTransaction({
+      amount: 10000,
+      customerName: 'Jane Doe',
+      customerEmail: 'jane@example.com',
+      paymentReference: 'pay-ref',
+      paymentDescription: 'Order payment',
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'https://monnify.example.test/api/v1/auth/login',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(getFetchHeaders(0).Authorization).toBe(
+      `Basic ${Buffer.from('option-api-key:option-secret-key').toString('base64')}`,
+    );
+    expect(getFetchBody(1)).toMatchObject({
+      contractCode: 'option-contract-code',
+    });
+  });
+
   it('reuses access tokens for transaction query requests', async () => {
     const service = new MonnifyService();
 
@@ -131,6 +160,63 @@ describe('MonnifyService', () => {
     expect(fetchMock.mock.calls[2]?.[0]).toBe(
       `${MONNIFY_BASE_URLS.sandbox}/api/v2/transactions/MNFY%7C123`,
     );
+  });
+
+  it('refreshes stale access tokens before later requests', async () => {
+    fetchMock.mockReset();
+    const staleToken = createJwt({
+      exp: Math.floor(Date.now() / 1000) + 30,
+      sub: 'merchant',
+    });
+    const freshToken = createJwt({
+      exp: Math.floor(Date.now() / 1000) + 300,
+      sub: 'merchant',
+    });
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          requestSuccessful: true,
+          responseMessage: 'success',
+          responseCode: '0',
+          responseBody: { accessToken: staleToken },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          requestSuccessful: true,
+          responseMessage: 'success',
+          responseCode: '0',
+          responseBody: {},
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          requestSuccessful: true,
+          responseMessage: 'success',
+          responseCode: '0',
+          responseBody: { accessToken: freshToken },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          requestSuccessful: true,
+          responseMessage: 'success',
+          responseCode: '0',
+          responseBody: {},
+        }),
+      );
+    const service = new MonnifyService();
+
+    await service.queryTransactionStatus({ paymentReference: 'pay-ref' });
+    await service.getTransactionStatus('MNFY|123');
+
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      `${MONNIFY_BASE_URLS.sandbox}/api/v1/auth/login`,
+      `${MONNIFY_BASE_URLS.sandbox}/api/v2/merchant/transactions/query?paymentReference=pay-ref`,
+      `${MONNIFY_BASE_URLS.sandbox}/api/v1/auth/login`,
+      `${MONNIFY_BASE_URLS.sandbox}/api/v2/transactions/MNFY%7C123`,
+    ]);
+    expect(getFetchHeaders(3).Authorization).toBe(`Bearer ${freshToken}`);
   });
 
   it('creates reserved accounts with contract code and bank defaults', async () => {

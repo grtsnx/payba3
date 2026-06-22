@@ -1,5 +1,4 @@
-import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
-import { handleResponse } from '../shared/response.helper';
+import { handleResponse, PAYBA3_HTTP_STATUS } from '../shared';
 import {
   createPaystackSignatureHash,
   getPaystackPreferredBank,
@@ -21,24 +20,29 @@ import type {
   PaystackListSubscriptionsOptions,
   PaystackOneTimeCheckoutInput,
   PaystackResponse,
+  PaystackServiceOptions,
   PaystackSubscriptionCheckoutInput,
   PaystackWebhookEvent,
   PaystackWebhookHeaders,
 } from './config/paystack.types';
 
-@Injectable()
 export class PaystackService {
   private readonly paystackSecret: string;
   private readonly preferredBank: string;
-  private readonly baseUrl = PAYSTACK_BASE_URL;
+  private readonly baseUrl: string;
 
-  constructor() {
+  constructor(options: PaystackServiceOptions = {}) {
     const environment = (process.env.PAYSTACK_ENVIRONMENT ??
       process.env.NODE_ENV ??
       'sandbox') as PaystackEnvironment;
-    const key = getPaystackSecret(environment);
-    this.paystackSecret = key ?? '';
-    this.preferredBank = getPaystackPreferredBank(environment);
+    this.baseUrl = (options.baseUrl ?? PAYSTACK_BASE_URL).replace(/\/+$/, '');
+    this.paystackSecret =
+      options.secretKey ??
+      getPaystackSecret(options.environment ?? environment) ??
+      '';
+    this.preferredBank =
+      options.preferredBank ??
+      getPaystackPreferredBank(options.environment ?? environment);
   }
 
   async createPaystackCustomer(
@@ -247,13 +251,13 @@ export class PaystackService {
     } catch (error) {
       if (error instanceof handleResponse && error.getStatus() === 400) {
         throw new handleResponse(
-          HttpStatus.BAD_REQUEST,
+          PAYBA3_HTTP_STATUS.BAD_REQUEST,
           'Invalid account number or bank code',
         );
       }
 
       throw new handleResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
         'Failed to resolve account details',
       );
     }
@@ -262,14 +266,17 @@ export class PaystackService {
   verifyWebhookSignature(body: unknown, headers: PaystackWebhookHeaders): void {
     const signature = getPaystackSignature(headers);
     if (!signature) {
-      throw new UnauthorizedException('Invalid Paystack signature');
+      throw new handleResponse(
+        PAYBA3_HTTP_STATUS.UNAUTHORIZED,
+        'Invalid Paystack signature',
+      );
     }
 
     const hash = createPaystackSignatureHash(body, this.paystackSecret);
 
     if (!isTimingSafeEqual(hash, signature)) {
       throw new handleResponse(
-        HttpStatus.FORBIDDEN,
+        PAYBA3_HTTP_STATUS.FORBIDDEN,
         'Invalid Paystack signature',
       );
     }
@@ -301,7 +308,7 @@ export class PaystackService {
   ): Promise<unknown> {
     if (!data.authorization?.trim()) {
       throw new handleResponse(
-        HttpStatus.BAD_REQUEST,
+        PAYBA3_HTTP_STATUS.BAD_REQUEST,
         'No saved payment method. Complete Paystack checkout to authorize billing.',
         {
           code: 'no_active_authorizations_for_customer',

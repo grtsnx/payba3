@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import {
   buildQoreIDCacEndpoint,
   fetchQoreIDToken,
@@ -12,23 +11,37 @@ import type {
   QoreIDCreateSessionResponse,
   QoreIDCredentials,
   QoreIDEnvironment,
+  QoreIDServiceOptions,
   QoreIDTokenCache,
   QoreIDVerifyCacOptions,
   QoreIDVerifyCacResponse,
 } from './config/qoreid.types';
 
-@Injectable()
 export class QoreIDService {
   private readonly baseUrl: string;
   private readonly credentials: QoreIDCredentials;
   private token?: QoreIDTokenCache;
 
-  constructor() {
+  constructor(options: QoreIDServiceOptions = {}) {
     const environment = (process.env.QOREID_ENVIRONMENT ??
       process.env.NODE_ENV ??
       'sandbox') as QoreIDEnvironment;
-    this.baseUrl = getQoreIDBaseUrl(environment, process.env.QOREID_BASE_URL);
-    this.credentials = getQoreIDCredentials(environment);
+    const envCredentials = getQoreIDCredentials(
+      options.environment ?? environment,
+    );
+
+    this.baseUrl = getQoreIDBaseUrl(
+      options.environment ?? environment,
+      options.baseUrl ?? process.env.QOREID_BASE_URL,
+    );
+    this.credentials = {
+      clientId:
+        options.clientId ??
+        options.credentials?.clientId ??
+        envCredentials.clientId,
+      secret:
+        options.secret ?? options.credentials?.secret ?? envCredentials.secret,
+    };
   }
 
   async getToken(): Promise<string> {

@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import {
   assertMonnifyContractCode,
   buildMonnifyQuery,
@@ -6,6 +5,7 @@ import {
   getMonnifyBaseUrl,
   getMonnifyCredentials,
   getValidMonnifyAccessToken,
+  normalizeMonnifyEnvironment,
   requestMonnify,
   verifyMonnifyWebhookSignature,
 } from './config/monnify.helper';
@@ -17,24 +17,42 @@ import type {
   MonnifyRequestOptions,
   MonnifyReservedAccountInput,
   MonnifyResponse,
+  MonnifyServiceOptions,
   MonnifySubAccountInput,
   MonnifyTokenCache,
   MonnifyTransactionStatusQuery,
   MonnifyTransferInput,
 } from './config/monnify.types';
 
-@Injectable()
 export class MonnifyService {
   private readonly baseUrl: string;
   private readonly credentials: MonnifyCredentials;
   private token?: MonnifyTokenCache;
 
-  constructor() {
-    const environment = (process.env.MONNIFY_ENVIRONMENT ??
-      'sandbox') as MonnifyEnvironment;
+  constructor(options: MonnifyServiceOptions = {}) {
+    const environment = normalizeMonnifyEnvironment(
+      options.environment ??
+        process.env.MONNIFY_ENVIRONMENT ??
+        process.env.NODE_ENV,
+    ) as MonnifyEnvironment;
+    const envCredentials = getMonnifyCredentials(environment);
 
-    this.baseUrl = getMonnifyBaseUrl(environment, process.env.MONNIFY_BASE_URL);
-    this.credentials = getMonnifyCredentials(environment);
+    this.baseUrl = getMonnifyBaseUrl(
+      environment,
+      options.baseUrl ?? process.env.MONNIFY_BASE_URL,
+    );
+    this.credentials = {
+      apiKey:
+        options.apiKey ?? options.credentials?.apiKey ?? envCredentials.apiKey,
+      secretKey:
+        options.secretKey ??
+        options.credentials?.secretKey ??
+        envCredentials.secretKey,
+      contractCode:
+        options.contractCode ??
+        options.credentials?.contractCode ??
+        envCredentials.contractCode,
+    };
   }
 
   async getAccessToken(): Promise<string> {

@@ -1,11 +1,12 @@
 import {
-  BadGatewayException,
-  GatewayTimeoutException,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+  getPayba3ErrorMessage,
+  handleResponse,
+  PAYBA3_HTTP_STATUS,
+} from '../../shared';
 import type {
+  NormalizedSafehavenEnvironment,
   SafehavenBaseUrls,
+  SafehavenCredentials,
   SafehavenEnvironment,
   SafehavenRequestContext,
   SafehavenRequestHeaders,
@@ -21,11 +22,42 @@ export const SAFEHAVEN_BASE_URLS: SafehavenBaseUrls = {
   live: 'https://api.safehavenmfb.com',
 };
 
+export const normalizeSafehavenEnvironment = (
+  environment?: string,
+): NormalizedSafehavenEnvironment =>
+  environment === 'live' || environment === 'production' ? 'live' : 'sandbox';
+
 export const getSafehavenBaseUrl = (
   environment: SafehavenEnvironment,
   baseUrlOverride?: string,
 ): string =>
-  (baseUrlOverride ?? SAFEHAVEN_BASE_URLS[environment]).replace(/\/+$/, '');
+  (
+    baseUrlOverride ??
+    SAFEHAVEN_BASE_URLS[normalizeSafehavenEnvironment(environment)]
+  ).replace(/\/+$/, '');
+
+export const getSafehavenCredentials = (
+  environment: SafehavenEnvironment,
+): SafehavenCredentials => {
+  const isLive = normalizeSafehavenEnvironment(environment) === 'live';
+
+  return {
+    clientId:
+      (isLive
+        ? process.env.SAFEHAVEN_LIVE_CLIENT_ID
+        : process.env.SAFEHAVEN_CLIENT_ID
+      )?.trim() ??
+      process.env.SAFEHAVEN_CLIENT_ID?.trim() ??
+      '',
+    clientAssertion:
+      (isLive
+        ? process.env.SAFEHAVEN_LIVE_CLIENT_ASSERTION
+        : process.env.SAFEHAVEN_CLIENT_ASSERTION
+      )?.trim() ??
+      process.env.SAFEHAVEN_CLIENT_ASSERTION?.trim() ??
+      '',
+  };
+};
 
 export const buildSafehavenHeaders = (
   options: SafehavenRequestOptions,
@@ -63,7 +95,7 @@ export const getSafehavenErrorData = (
   }
 
   if (error instanceof Error) {
-    return error.message;
+    return getPayba3ErrorMessage(error, 'Safehaven request failed');
   }
 
   return error;
@@ -71,7 +103,8 @@ export const getSafehavenErrorData = (
 
 export const assertSafehavenClientId = (clientId: string): string => {
   if (!clientId) {
-    throw new InternalServerErrorException(
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'SAFEHAVEN_CLIENT_ID is not configured',
     );
   }
@@ -83,7 +116,8 @@ export const assertSafehavenClientAssertion = (
   clientAssertion: string,
 ): string => {
   if (!clientAssertion) {
-    throw new InternalServerErrorException(
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'SAFEHAVEN_CLIENT_ASSERTION is not configured',
     );
   }
@@ -149,16 +183,18 @@ export const throwSafehavenRequestError = (
   isProduction: boolean,
 ): never => {
   if (status === 401) {
-    throw new UnauthorizedException({
-      message: 'Unauthorized request to Safehaven',
-      data: getSafehavenErrorData(responseBody, isProduction),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.UNAUTHORIZED,
+      'Unauthorized request to Safehaven',
+      getSafehavenErrorData(responseBody, isProduction),
+    );
   }
 
-  throw new BadGatewayException({
-    message: 'Safehaven request failed',
-    data: getSafehavenErrorData(responseBody, isProduction),
-  });
+  throw new handleResponse(
+    PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+    'Safehaven request failed',
+    getSafehavenErrorData(responseBody, isProduction),
+  );
 };
 
 export const requestSafehaven = async <T>({
@@ -184,13 +220,17 @@ export const requestSafehaven = async <T>({
     });
   } catch (error) {
     if (abortController.signal.aborted) {
-      throw new GatewayTimeoutException('Safehaven request timed out');
+      throw new handleResponse(
+        PAYBA3_HTTP_STATUS.GATEWAY_TIMEOUT,
+        'Safehaven request timed out',
+      );
     }
 
-    throw new BadGatewayException({
-      message: 'Safehaven request failed',
-      data: getSafehavenErrorData(error, isProduction),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'Safehaven request failed',
+      getSafehavenErrorData(error, isProduction),
+    );
   } finally {
     clearTimeout(timeout);
   }

@@ -1,14 +1,14 @@
 import * as crypto from 'crypto';
 import {
-  BadGatewayException,
-  HttpStatus,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { handleResponse } from '../../shared/response.helper';
+  getPayba3ErrorMessage,
+  handleResponse,
+  PAYBA3_HTTP_STATUS,
+} from '../../shared';
 import type {
   OPayBaseUrls,
   OPayCredentials,
   OPayEnvironment,
+  NormalizedOPayEnvironment,
   OPayRequestContext,
   OPayRequestOptions,
   OPayResponse,
@@ -19,27 +19,34 @@ export const OPAY_BASE_URLS: OPayBaseUrls = {
   live: 'https://liveapi.opaycheckout.com',
 };
 
+export const normalizeOPayEnvironment = (
+  environment?: string,
+): NormalizedOPayEnvironment =>
+  environment === 'live' || environment === 'production' ? 'live' : 'sandbox';
+
 export const getOPayBaseUrl = (
   environment: OPayEnvironment,
   baseUrlOverride?: string,
 ): string =>
-  (baseUrlOverride ?? OPAY_BASE_URLS[environment]).replace(/\/+$/, '');
+  (
+    baseUrlOverride ?? OPAY_BASE_URLS[normalizeOPayEnvironment(environment)]
+  ).replace(/\/+$/, '');
 
 export const getOPayCredentials = (
   environment: OPayEnvironment,
 ): OPayCredentials => ({
   merchantId:
-    (environment === 'live'
+    (normalizeOPayEnvironment(environment) === 'live'
       ? process.env.OPAY_LIVE_MERCHANT_ID
       : process.env.OPAY_MERCHANT_ID
     )?.trim() ?? '',
   publicKey:
-    (environment === 'live'
+    (normalizeOPayEnvironment(environment) === 'live'
       ? process.env.OPAY_LIVE_PUBLIC_KEY
       : process.env.OPAY_PUBLIC_KEY
     )?.trim() ?? '',
   secretKey:
-    (environment === 'live'
+    (normalizeOPayEnvironment(environment) === 'live'
       ? process.env.OPAY_LIVE_SECRET_KEY
       : process.env.OPAY_SECRET_KEY
     )?.trim() ?? '',
@@ -50,17 +57,24 @@ export const assertOPayCredentials = (
   authMode: OPayRequestOptions['authMode'],
 ): void => {
   if (!credentials.merchantId) {
-    throw new InternalServerErrorException(
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'OPAY_MERCHANT_ID is not configured',
     );
   }
 
   if (authMode === 'publicKey' && !credentials.publicKey) {
-    throw new InternalServerErrorException('OPAY_PUBLIC_KEY is not configured');
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'OPAY_PUBLIC_KEY is not configured',
+    );
   }
 
   if (authMode === 'signature' && !credentials.secretKey) {
-    throw new InternalServerErrorException('OPAY_SECRET_KEY is not configured');
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'OPAY_SECRET_KEY is not configured',
+    );
   }
 };
 
@@ -158,7 +172,7 @@ export const isOPayResponse = (value: unknown): value is OPayResponse =>
   'message' in value;
 
 export const getOPayErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : 'OPay request failed';
+  getPayba3ErrorMessage(error, 'OPay request failed');
 
 export const requestOPay = async <T = unknown>({
   baseUrl,
@@ -176,17 +190,20 @@ export const requestOPay = async <T = unknown>({
       buildOPayRequestInit(credentials, options),
     );
   } catch (error) {
-    throw new BadGatewayException({
-      message: 'OPay request failed',
-      data: getOPayErrorMessage(error),
-    });
+    throw new handleResponse(
+      PAYBA3_HTTP_STATUS.BAD_GATEWAY,
+      'OPay request failed',
+      {
+        data: getOPayErrorMessage(error),
+      },
+    );
   }
 
   const body = await parseOPayResponse(response);
 
   if (!response.ok) {
     throw new handleResponse(
-      HttpStatus.BAD_REQUEST,
+      PAYBA3_HTTP_STATUS.BAD_REQUEST,
       'OPay request failed',
       body,
     );
@@ -194,7 +211,7 @@ export const requestOPay = async <T = unknown>({
 
   if (isOPayResponse(body) && body.code !== '00000') {
     throw new handleResponse(
-      HttpStatus.BAD_REQUEST,
+      PAYBA3_HTTP_STATUS.BAD_REQUEST,
       body.message || 'OPay request failed',
       body,
     );
