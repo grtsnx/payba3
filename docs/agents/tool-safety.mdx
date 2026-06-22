@@ -1,0 +1,78 @@
+---
+title: Tool safety
+description: Safety rules for agent-generated payment tools.
+icon: shield-check
+---
+
+# Tool safety
+
+Payment tools need stricter guardrails than ordinary data-fetching tools.
+
+## Use narrow actions
+
+Good:
+
+```ts
+initializePaystackCheckout(input);
+verifyPaystackTransaction(input);
+createSafehavenSubaccount(input);
+verifyQoreIDCac(input);
+```
+
+Avoid:
+
+```ts
+callAnyProviderMethod(provider, method, payload);
+```
+
+## Validate every input
+
+Every tool should define:
+
+- required fields
+- allowed enum values
+- minimum and maximum amount
+- reference format
+- provider-specific identity requirements
+
+## Add idempotency at the app layer
+
+payba3 sends provider requests. Your app should own:
+
+- idempotency keys
+- duplicate reference prevention
+- retry policy
+- database transaction boundaries
+- final payment state
+
+## Separate read and write tools
+
+Prefer separate tools:
+
+- `verifyTransaction`
+- `initializeCheckout`
+- `createRefund`
+- `initiateTransfer`
+
+This makes approval and audit trails cleaner.
+
+## Human approval
+
+Live money-moving actions should be approved by a human or by a trusted app workflow.
+
+## Redaction
+
+Before showing tool output to a model or user, redact:
+
+- access tokens
+- refresh tokens
+- client assertions
+- secrets
+- BVN
+- NIN
+- OTP
+- customer identity data that is not needed for the next step
+
+## Sandbox first
+
+Agent-generated integrations should default to sandbox. Switch to live only after the developer explicitly requests it.

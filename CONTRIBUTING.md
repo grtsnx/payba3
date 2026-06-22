@@ -52,6 +52,19 @@ payba3/
 ├── assets/
 │   ├── payba3-logo.svg            # Full README/project logo
 │   └── payba3-mark.svg            # Compact icon/mark
+├── docs/
+│   ├── agents/                    # AI agent, IDE, and tool-server guides
+│   ├── concepts/                  # Core concepts such as channels, errors, tokens
+│   ├── examples/                  # Framework and runtime usage examples
+│   ├── migration/                 # Version migration notes
+│   ├── operations/                # Testing, CI, and release documentation
+│   ├── providers/                 # Provider-specific integration guides
+│   ├── reference/                 # Env vars, exports, and method references
+│   ├── security/                  # Security guidance for app and agent usage
+│   ├── configuration.mdx          # Configuration guide
+│   ├── installation.mdx           # Installation guide
+│   ├── introduction.mdx           # Docs homepage
+│   └── quickstart.mdx             # First integration path
 ├── scripts/
 │   ├── package-release.sh         # Release archive builder
 │   └── package-smoke-test.mjs     # Clean install/import package smoke test
@@ -83,6 +96,7 @@ payba3/
 ├── CODE_OF_CONDUCT.md             # Community behavior expectations
 ├── CHANGELOG.md                   # Human-readable change log
 ├── CONTRIBUTING.md                # This contributor guide
+├── docs.json                      # Mintlify documentation configuration/nav map
 ├── LICENSE                        # MIT license
 ├── package.json                   # Package metadata and scripts
 └── bun.lock                       # Dependency lockfile
@@ -129,6 +143,16 @@ When adding or expanding a provider:
 - Validate credentials when a provider is used, not when an unused provider is merely registered.
 - Keep secret-bearing data out of logs and error messages.
 - Add tests for new behavior.
+
+## Documentation Guidelines
+
+- Add developer-facing usage docs to `docs/`.
+- Update `docs.json` whenever you add, remove, or move an MDX page.
+- Keep provider pages aligned with the implementation and provider LLM files.
+- Put AI-agent guidance under `docs/agents/`.
+- Keep security guidance practical and action-oriented.
+- Run `bun run test` so the Mintlify navigation test catches broken docs links.
+- Use a Mintlify-supported LTS Node runtime for `bun run docs:dev`, `bun run docs:validate`, and `bun run docs:broken-links`.
 
 ## Pull Request Checklist
 

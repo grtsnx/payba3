@@ -1,0 +1,72 @@
+---
+title: Next.js
+description: Use payba3 in Next.js route handlers without exposing secrets to the browser.
+icon: panels-top-left
+---
+
+# Next.js
+
+Use payba3 only in server-side files such as Route Handlers, Server Actions, or background jobs. Do not import provider clients into client components.
+
+## Server-only client
+
+```ts
+// src/server/payba3.ts
+import 'server-only';
+import { createPayba3 } from '@grtsnx/payba3';
+
+export const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+## Checkout route handler
+
+```ts
+// src/app/api/payments/paystack/checkout/route.ts
+import { NextResponse } from 'next/server';
+import { payba3 } from '@/server/payba3';
+
+export async function POST(request: Request) {
+  const body = await request.json();
+
+  const checkout = await payba3.use('paystack').initializeOneTimeCheckout({
+    email: body.email,
+    amountInKobo: body.amountInKobo,
+    currency: 'NGN',
+    reference: body.reference,
+  });
+
+  return NextResponse.json(checkout);
+}
+```
+
+## Webhook route handler
+
+```ts
+// src/app/api/webhooks/paystack/route.ts
+import { NextResponse } from 'next/server';
+import { payba3 } from '@/server/payba3';
+
+export async function POST(request: Request) {
+  const rawBody = await request.text();
+
+  payba3.use('paystack').verifyWebhookSignature(rawBody, {
+    'x-paystack-signature': request.headers.get('x-paystack-signature'),
+  });
+
+  const event = JSON.parse(rawBody);
+
+  // Verify provider state and store the event idempotently.
+
+  return NextResponse.json({ ok: true });
+}
+```
+
+## Deployment notes
+
+- Put provider secrets in your deployment secret store.
+- Keep webhook routes on the Node.js runtime when a provider helper requires Node-compatible crypto.
+- Never expose secret keys through `NEXT_PUBLIC_` environment variables.

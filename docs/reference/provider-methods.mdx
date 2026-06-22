@@ -1,0 +1,110 @@
+---
+title: Provider methods
+description: Public methods available on each payba3 provider channel.
+icon: braces
+---
+
+# Provider methods
+
+These methods are exposed by provider services in the current package.
+
+## Paystack
+
+| Method                                                         | Purpose                       |
+| -------------------------------------------------------------- | ----------------------------- |
+| `createPaystackCustomer(input)`                                | Create a Paystack customer.   |
+| `createDedicatedAccount(customerCode)`                         | Create a dedicated account.   |
+| `retrieveDedicatedAccount(id)`                                 | Retrieve a dedicated account. |
+| `retrieveCustomerCode(email)`                                  | Resolve a customer code.      |
+| `initializeTransaction(email, amount, currency, callbackUrl?)` | Initialize a transaction.     |
+| `initializeSubscriptionCheckout(input)`                        | Start subscription checkout.  |
+| `listCustomerSubscriptions(customerCodeOrEmail)`               | List customer subscriptions.  |
+| `verifyTransaction(reference)`                                 | Verify a transaction.         |
+| `initializeOneTimeCheckout(input)`                             | Start one-time checkout.      |
+| `chargeAuthorization(input)`                                   | Charge an authorization.      |
+| `getBanks()`                                                   | List banks.                   |
+| `getBankById(id)`                                              | Fetch bank by id.             |
+| `getBankByCode(code)`                                          | Fetch bank by code.           |
+| `resolveBankAccount(accountNumber, bankCode)`                  | Resolve a bank account.       |
+| `verifyWebhookSignature(body, headers)`                        | Verify webhook signature.     |
+| `handlePaystackWebhook(event)`                                 | Handle webhook event.         |
+| `fetchPlan(planCode)`                                          | Fetch a plan.                 |
+| `createSubscription(input)`                                    | Create a subscription.        |
+| `fetchSubscription(code)`                                      | Fetch a subscription.         |
+| `disableSubscription(code, token)`                             | Disable a subscription.       |
+| `createCustomer(input)`                                        | Create a customer.            |
+| `fetchCustomerByEmail(email)`                                  | Fetch customer by email.      |
+| `createTransferRecipient(input)`                               | Create transfer recipient.    |
+| `deleteTransferRecipient(recipientCode)`                       | Delete transfer recipient.    |
+| `initiateTransfer(input)`                                      | Start a transfer.             |
+| `getPaystackBalance()`                                         | Fetch balance.                |
+
+## Safehaven
+
+| Method                    | Purpose                               |
+| ------------------------- | ------------------------------------- |
+| `getAccessToken()`        | Get or refresh an OAuth access token. |
+| `createSubAccount(input)` | Create a Safehaven subaccount.        |
+
+## QoreID
+
+| Method                   | Purpose                               |
+| ------------------------ | ------------------------------------- |
+| `getToken()`             | Get or refresh an API access token.   |
+| `createSession(input)`   | Create a hosted verification session. |
+| `verifyCacNumber(input)` | Verify a CAC number.                  |
+
+## OPay
+
+| Method                               | Purpose                         |
+| ------------------------------------ | ------------------------------- |
+| `request(path, options)`             | Make a signed provider request. |
+| `createCashierPayment(input)`        | Create a cashier payment.       |
+| `createPayment(input)`               | Create payment.                 |
+| `queryPaymentStatus(input)`          | Query payment status.           |
+| `cancelPayment(input)`               | Cancel payment.                 |
+| `createRefund(input)`                | Create refund.                  |
+| `queryRefundStatus(input)`           | Query refund status.            |
+| `sendOtp(input)`                     | Send OTP.                       |
+| `inputOtp(input)`                    | Submit OTP.                     |
+| `inputPin(input)`                    | Submit PIN.                     |
+| `verifyCallback(payload, signature)` | Verify callback signature.      |
+
+## SeerBit
+
+| Method                                | Purpose                      |
+| ------------------------------------- | ---------------------------- |
+| `getBearerToken()`                    | Get or refresh bearer token. |
+| `createVirtualAccount(input)`         | Create a virtual account.    |
+| `getVirtualAccount(accountReference)` | Fetch a virtual account.     |
+
+## Monnify
+
+| Method                                    | Purpose                              |
+| ----------------------------------------- | ------------------------------------ |
+| `getAccessToken()`                        | Get or refresh access token.         |
+| `request(path, options)`                  | Make an authenticated request.       |
+| `initializeTransaction(input)`            | Initialize card/payment transaction. |
+| `initializeBankTransfer(input)`           | Initialize bank transfer payment.    |
+| `getTransactionStatus(reference)`         | Fetch transaction status.            |
+| `queryTransactionStatus(reference)`       | Query transaction status.            |
+| `createReservedAccount(input)`            | Create reserved account.             |
+| `getReservedAccountDetails(reference)`    | Fetch reserved account.              |
+| `initiateSingleTransfer(input)`           | Start a single transfer.             |
+| `createSubAccounts(input)`                | Create Monnify subaccounts.          |
+| `initiateRefund(input)`                   | Start refund.                        |
+| `verifyWebhookSignature(body, signature)` | Verify webhook signature.            |
+
+## Mono
+
+| Method                                   | Purpose                     |
+| ---------------------------------------- | --------------------------- |
+| `request(path, options)`                 | Make authenticated request. |
+| `initiateAccountLinking(input)`          | Start account linking.      |
+| `exchangeToken(code)`                    | Exchange temporary code.    |
+| `getAccount(accountId)`                  | Fetch account.              |
+| `getTransactions(accountId, options?)`   | Fetch transactions.         |
+| `initiatePayment(input)`                 | Start DirectPay payment.    |
+| `verifyPayment(reference)`               | Verify payment.             |
+| `createDisbursementSourceAccount(input)` | Create source account.      |
+| `initiateBvnLookup(input)`               | Start BVN lookup.           |

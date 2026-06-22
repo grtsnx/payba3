@@ -1,0 +1,90 @@
+---
+title: NestJS
+description: Wrap payba3 in a NestJS provider while keeping the package framework-neutral.
+icon: hexagon
+---
+
+# NestJS
+
+payba3 2.x does not require Nest. In a NestJS application, wrap the framework-neutral client in your own provider.
+
+## Payment module
+
+```ts
+import { Module } from '@nestjs/common';
+import { PaymentService } from './payment.service';
+
+@Module({
+  providers: [PaymentService],
+  exports: [PaymentService],
+})
+export class PaymentModule {}
+```
+
+## Service wrapper
+
+```ts
+import { Injectable } from '@nestjs/common';
+import { createPayba3 } from '@grtsnx/payba3';
+
+@Injectable()
+export class PaymentService {
+  private readonly payba3 = createPayba3({
+    paystack: {
+      secretKey: process.env.PAYSTACK_SECRET_KEY,
+    },
+    safehaven: {
+      environment:
+        process.env.SAFEHAVEN_ENVIRONMENT === 'live' ? 'live' : 'sandbox',
+      clientId: process.env.SAFEHAVEN_CLIENT_ID,
+      clientAssertion: process.env.SAFEHAVEN_CLIENT_ASSERTION,
+    },
+  });
+
+  initializeCheckout(input: {
+    email: string;
+    amountInKobo: number;
+    reference: string;
+  }) {
+    return this.payba3.use('paystack').initializeOneTimeCheckout({
+      email: input.email,
+      amountInKobo: input.amountInKobo,
+      currency: 'NGN',
+      reference: input.reference,
+    });
+  }
+
+  createSafehavenSubAccount(input: {
+    phoneNumber: string;
+    identityType: string;
+    identityId: string;
+    emailAddress: string;
+    externalReference: string;
+  }) {
+    return this.payba3.use('safehaven').createSubAccount(input);
+  }
+}
+```
+
+## Controller
+
+```ts
+import { Body, Controller, Post } from '@nestjs/common';
+import { PaymentService } from './payment.service';
+
+@Controller('payments')
+export class PaymentController {
+  constructor(private readonly paymentService: PaymentService) {}
+
+  @Post('checkout')
+  checkout(
+    @Body() body: { email: string; amountInKobo: number; reference: string },
+  ) {
+    return this.paymentService.initializeCheckout(body);
+  }
+}
+```
+
+## Why wrap it
+
+The wrapper gives your application a narrow, auditable payment API. It also keeps controllers, agents, and jobs from reaching directly into every provider method.

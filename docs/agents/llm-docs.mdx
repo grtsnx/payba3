@@ -1,0 +1,68 @@
+---
+title: LLM documentation files
+description: Package exports that let LLMs and IDEs understand payba3 without scraping source.
+icon: file-text
+---
+
+# LLM documentation files
+
+payba3 exports documentation files through package subpaths.
+
+## Resolve docs from an installed package
+
+```ts
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+
+const docs = {
+  index: require.resolve('@grtsnx/payba3/llms.txt'),
+  full: require.resolve('@grtsnx/payba3/llms-full.txt'),
+  agents: require.resolve('@grtsnx/payba3/agents.md'),
+  manifest: require.resolve('@grtsnx/payba3/agents.json'),
+  mcpTools: require.resolve('@grtsnx/payba3/agents/mcp-tools.json'),
+  paystack: require.resolve('@grtsnx/payba3/llms/paystack.txt'),
+};
+
+const index = readFileSync(docs.index, 'utf8');
+const manifest = JSON.parse(readFileSync(docs.manifest, 'utf8'));
+```
+
+## Available files
+
+| Export                                 | Use                              |
+| -------------------------------------- | -------------------------------- |
+| `@grtsnx/payba3/llms.txt`              | Short LLM entrypoint             |
+| `@grtsnx/payba3/llms-full.txt`         | Full package context             |
+| `@grtsnx/payba3/agents.md`             | Agent integration guide          |
+| `@grtsnx/payba3/agents.json`           | Machine-readable agent manifest  |
+| `@grtsnx/payba3/agents/ide-prompt.md`  | Prompt for IDE coding agents     |
+| `@grtsnx/payba3/agents/mcp-tools.json` | Suggested MCP-style tool schemas |
+| `@grtsnx/payba3/llms/<provider>.txt`   | Provider-specific reference      |
+
+## Provider docs
+
+```text
+@grtsnx/payba3/llms/paystack.txt
+@grtsnx/payba3/llms/safehaven.txt
+@grtsnx/payba3/llms/seerbit.txt
+@grtsnx/payba3/llms/opay.txt
+@grtsnx/payba3/llms/mono.txt
+@grtsnx/payba3/llms/monnify.txt
+@grtsnx/payba3/llms/qoreid.txt
+```
+
+## Usage in code generators
+
+A code generator can:
+
+1. install payba3
+2. resolve `agents.json`
+3. choose a provider
+4. read the provider docs
+5. generate a server-side wrapper with explicit config
+6. generate env var placeholders
+7. add tests for the wrapper
+
+The generator should not invent credentials or provider payloads that are not in the docs.

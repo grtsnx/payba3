@@ -1,0 +1,72 @@
+---
+title: Errors
+description: Handle Payba3Error and provider request failures.
+icon: triangle-alert
+---
+
+# Errors
+
+payba3 uses `Payba3Error` for framework-neutral package errors.
+
+```ts
+import { Payba3Error } from '@grtsnx/payba3';
+```
+
+## Error shape
+
+```ts
+try {
+  await payba3.use('paystack').getPaystackBalance();
+} catch (error) {
+  if (error instanceof Payba3Error) {
+    console.log(error.getStatus());
+    console.log(error.getResponse());
+  }
+}
+```
+
+`getResponse()` returns:
+
+```ts
+type Payba3ErrorBody = {
+  statusCode: number;
+  statusType: string;
+  message: string;
+  provider?: string;
+  code?: string;
+  data?: unknown;
+};
+```
+
+## Common status codes
+
+| Status | Meaning                                      |
+| ------ | -------------------------------------------- |
+| 400    | Invalid request or provider validation error |
+| 401    | Unauthorized request                         |
+| 403    | Forbidden request or invalid signature       |
+| 404    | Unsupported payba3 channel                   |
+| 500    | Missing configuration or internal error      |
+| 502    | Provider request failed                      |
+| 504    | Provider request timed out                   |
+
+## Do not leak secrets
+
+Error responses can include provider response data. Avoid sending raw errors directly to browsers or LLM tools.
+
+```ts
+catch (error) {
+  if (error instanceof Payba3Error) {
+    return {
+      statusCode: error.getStatus(),
+      message: error.message,
+    };
+  }
+
+  throw error;
+}
+```
+
+## Agent handling
+
+Agents should summarize errors without exposing raw provider payloads. Store detailed errors in trusted server logs only after redaction.

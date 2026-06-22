@@ -1,0 +1,80 @@
+---
+title: IDE integration
+description: Use payba3 safely from Cursor, Copilot, Codex, and other coding agents.
+icon: code-2
+---
+
+# IDE integration
+
+Use the package-exported docs as context for coding assistants.
+
+## Copy-paste prompt
+
+```text
+You are integrating @grtsnx/payba3.
+
+Read these package docs before writing code:
+- @grtsnx/payba3/llms.txt
+- @grtsnx/payba3/agents.md
+- @grtsnx/payba3/llms-full.txt if you need more context
+- @grtsnx/payba3/llms/<provider>.txt for every requested provider
+
+Rules:
+- Generate server-side TypeScript or JavaScript only.
+- Import createPayba3 from @grtsnx/payba3.
+- Configure only the provider being used.
+- Keep all provider secrets in environment variables or the host app secret manager.
+- Never expose provider keys, access tokens, refresh tokens, JWT client assertions, BVN, NIN, OTP, or webhook secrets to client code.
+- Use sandbox by default unless the developer explicitly asks for live.
+- Validate tool/API input before calling payba3.
+- Verify webhooks and transaction status server-side before marking anything paid or fulfilled.
+- Ask for human confirmation before live transfers, refunds, debits, or other money-moving actions unless the host app already has an approval workflow.
+```
+
+## Good output shape
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+
+export async function createCheckout(input: {
+  email: string;
+  amountInKobo: number;
+  reference: string;
+}) {
+  return payba3.use('paystack').initializeOneTimeCheckout({
+    email: input.email,
+    amountInKobo: input.amountInKobo,
+    currency: 'NGN',
+    reference: input.reference,
+  });
+}
+```
+
+## Bad output shape
+
+Do not generate a generic method caller:
+
+```ts
+export async function callProvider(method: string, payload: unknown) {
+  return (payba3.use('paystack') as any)[method](payload);
+}
+```
+
+This gives the model too much power and makes approval, validation, and audit trails weak.
+
+## Recommended generated files
+
+For most apps, ask the IDE to generate:
+
+- a server-side payment service
+- typed request validation
+- route/controller handlers
+- tests for success and failure cases
+- env sample entries
+- webhook verification route when using callbacks

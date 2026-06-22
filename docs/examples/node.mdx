@@ -1,0 +1,76 @@
+---
+title: Node.js
+description: Use payba3 from a plain Node.js script or service.
+icon: terminal
+---
+
+# Node.js
+
+Use payba3 anywhere you can run server-side JavaScript or TypeScript.
+
+## Install
+
+```bash
+npm install @grtsnx/payba3
+```
+
+## Create a client
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+## Run a checkout
+
+```ts
+async function main() {
+  const checkout = await payba3.use('paystack').initializeOneTimeCheckout({
+    email: 'customer@example.com',
+    amountInKobo: 500000,
+    currency: 'NGN',
+    reference: `order_${Date.now()}`,
+  });
+
+  console.log(checkout);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+```
+
+## Use multiple providers
+
+```ts
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+  mono: {
+    secretKey: process.env.MONO_SECRET_KEY,
+  },
+  qoreid: {
+    clientId: process.env.QOREID_CLIENT,
+    secret: process.env.QOREID_SECRET,
+  },
+});
+
+const linkedAccount = await payba3.use('mono').getAccount('account-id');
+const verification = await payba3.use('qoreid').verifyCacNumber({
+  registrationNumber: '1234567',
+});
+```
+
+## Production notes
+
+- Keep provider credentials in environment variables or a secret manager.
+- Use provider sandbox credentials until a workflow is fully tested.
+- Verify payments server-side before delivering value.
+- Add idempotency around jobs that can retry.

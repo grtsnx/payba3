@@ -1,0 +1,61 @@
+---
+title: Releasing
+description: Publish payba3 to npm and GitHub Packages.
+icon: package-check
+---
+
+# Releasing
+
+Release only after CI is green and the package smoke tests pass.
+
+## Pre-release
+
+```bash
+bun install --frozen-lockfile
+bun run lint
+bun run test
+bun run test:e2e
+bun run build
+bun run pack:dry
+bun run test:package
+bun run test:package:bun
+bun audit
+```
+
+## Version
+
+Use semantic versioning.
+
+```bash
+npm version patch
+npm version minor
+npm version major
+```
+
+## GitHub release
+
+Create a tagged release with release notes that include:
+
+- what changed
+- migration notes
+- supported providers
+- package install command
+- verification performed
+
+## npm publish
+
+```bash
+npm login
+npm whoami
+npm publish --access public
+```
+
+If npm requires a one-time password, rerun publish with the current OTP:
+
+```bash
+npm publish --access public --otp 123456
+```
+
+## GitHub Packages
+
+Use the release workflow to publish the same package to GitHub Packages when the repository is configured for it. Keep npm as the primary public install path unless your users explicitly need GitHub Packages.

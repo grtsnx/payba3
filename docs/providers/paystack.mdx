@@ -1,0 +1,119 @@
+---
+title: Paystack
+description: Checkout, transaction verification, subscriptions, transfers, and dedicated accounts with Paystack.
+icon: credit-card
+---
+
+# Paystack
+
+Paystack is available through the `paystack` channel.
+
+```ts
+const paystack = payba3.use('paystack');
+```
+
+## Signup and docs
+
+| Resource | Link                            |
+| -------- | ------------------------------- |
+| Signup   | https://paystack.com/developers |
+| API docs | https://paystack.com/docs/api/  |
+
+## Configuration
+
+```ts
+const payba3 = createPayba3({
+  paystack: {
+    environment: 'sandbox',
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+    preferredBank: 'test-bank',
+  },
+});
+```
+
+Environment variables:
+
+```bash
+PAYSTACK_ENVIRONMENT=sandbox
+PAYSTACK_SECRET_KEY=
+PAYSTACK_SECRET_KEY_LIVE=
+```
+
+## Common methods
+
+| Method                                                         | Purpose                                     |
+| -------------------------------------------------------------- | ------------------------------------------- |
+| `initializeOneTimeCheckout(input)`                             | Start a one-time checkout                   |
+| `initializeTransaction(email, amount, currency, callbackUrl?)` | Start a transaction with simple arguments   |
+| `verifyTransaction(reference)`                                 | Verify payment status                       |
+| `createCustomer(input)`                                        | Create a customer                           |
+| `fetchCustomerByEmail(email)`                                  | Find customer by email                      |
+| `createDedicatedAccount(customerCode)`                         | Create a dedicated account                  |
+| `retrieveDedicatedAccount(id)`                                 | Fetch dedicated account details             |
+| `getBanks()`                                                   | List banks                                  |
+| `resolveBankAccount(accountNumber, bankCode)`                  | Resolve bank account ownership              |
+| `createTransferRecipient(input)`                               | Create a transfer recipient                 |
+| `initiateTransfer(input)`                                      | Start a transfer                            |
+| `createSubscription(input)`                                    | Create a subscription with an authorization |
+| `verifyWebhookSignature(body, headers)`                        | Verify webhook signature                    |
+
+## One-time checkout
+
+```ts
+await payba3.use('paystack').initializeOneTimeCheckout({
+  email: 'customer@example.com',
+  amountInKobo: 250000,
+  currency: 'NGN',
+  reference: 'order_123',
+});
+```
+
+## Verify a transaction
+
+```ts
+await payba3.use('paystack').verifyTransaction('order_123');
+```
+
+Always verify transactions server-side before marking an order paid.
+
+## Dedicated account
+
+```ts
+const customer = await payba3.use('paystack').createCustomer({
+  email: 'customer@example.com',
+  first_name: 'Jane',
+  last_name: 'Doe',
+});
+
+await payba3.use('paystack').createDedicatedAccount('CUS_xxx');
+```
+
+## Transfers
+
+```ts
+const recipient = await payba3.use('paystack').createTransferRecipient({
+  type: 'nuban',
+  name: 'Jane Doe',
+  account_number: '0123456789',
+  bank_code: '058',
+  currency: 'NGN',
+});
+
+await payba3.use('paystack').initiateTransfer({
+  source: 'balance',
+  amount: 100000,
+  recipient: 'RCP_xxx',
+  reference: 'transfer_123',
+  reason: 'Vendor payout',
+});
+```
+
+Add human approval before live transfers.
+
+## Webhooks
+
+```ts
+payba3.use('paystack').verifyWebhookSignature(rawBody, headers);
+```
+
+Use the raw request body when verifying Paystack webhooks. Do not trust a webhook payload until its signature is verified.

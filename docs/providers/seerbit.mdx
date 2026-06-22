@@ -1,0 +1,72 @@
+---
+title: SeerBit
+description: Create and retrieve SeerBit virtual accounts.
+icon: wallet-cards
+---
+
+# SeerBit
+
+SeerBit is available through the `seerbit` channel.
+
+```ts
+const seerbit = payba3.use('seerbit');
+```
+
+## Signup and docs
+
+| Resource | Link                               |
+| -------- | ---------------------------------- |
+| Signup   | https://www.seerbit.com/developers |
+| API docs | https://doc.seerbit.com/           |
+
+## Configuration
+
+```ts
+const payba3 = createPayba3({
+  seerbit: {
+    environment: 'sandbox',
+    publicKey: process.env.SEERBIT_PUBLIC_KEY,
+    secretKey: process.env.SEERBIT_SECRET_KEY,
+  },
+});
+```
+
+Environment variables:
+
+```bash
+SEERBIT_ENVIRONMENT=sandbox
+SEERBIT_BASE_URL=
+SEERBIT_PUBLIC_KEY=
+SEERBIT_SECRET_KEY=
+SEERBIT_LIVE_PUBLIC_KEY=
+SEERBIT_LIVE_SECRET_KEY=
+```
+
+## Common methods
+
+| Method                         | Purpose                                           |
+| ------------------------------ | ------------------------------------------------- |
+| `getBearerToken()`             | Generate and cache SeerBit encrypted bearer token |
+| `createVirtualAccount(input)`  | Create a virtual account                          |
+| `getVirtualAccount(reference)` | Fetch a virtual account by reference              |
+
+## Create virtual account
+
+```ts
+await payba3.use('seerbit').createVirtualAccount({
+  fullName: 'Jane Doe',
+  email: 'jane@example.com',
+  reference: 'customer_123',
+  bankVerificationNumber: '12345678901',
+  currency: 'NGN',
+  country: 'NG',
+});
+```
+
+## Retrieve virtual account
+
+```ts
+const account = await payba3.use('seerbit').getVirtualAccount('customer_123');
+```
+
+If the provider response does not include a virtual account number, payba3 returns `null` for lookups and throws for creation failures.

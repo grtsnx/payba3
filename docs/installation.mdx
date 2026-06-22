@@ -1,0 +1,78 @@
+---
+title: Installation
+description: Install payba3 with npm, Bun, pnpm, or Yarn.
+icon: package
+---
+
+# Installation
+
+payba3 ships compiled JavaScript, TypeScript declarations, and package exports for docs that agents and IDEs can resolve.
+
+## npm
+
+```bash
+npm install @grtsnx/payba3
+```
+
+## Bun
+
+```bash
+bun add @grtsnx/payba3
+```
+
+## pnpm
+
+```bash
+pnpm add @grtsnx/payba3
+```
+
+## Yarn
+
+```bash
+yarn add @grtsnx/payba3
+```
+
+## Runtime requirements
+
+payba3 2.x is framework-neutral. It needs a server-side runtime with:
+
+- `fetch`
+- `URLSearchParams`
+- Node-compatible crypto APIs
+
+Node.js 18+ and Bun are covered by package smoke tests.
+
+## No Nest peer dependencies
+
+The root package does not require Nest runtime peer dependencies. A Nest application can still use payba3, but a non-Nest app does not need to install any Nest package.
+
+## Import surface
+
+```ts
+import {
+  createPayba3,
+  Payba3Error,
+  PAYBA3_CHANNELS,
+  PaystackService,
+  SafehavenService,
+  type Payba3Config,
+  type Payba3ChannelName,
+} from '@grtsnx/payba3';
+```
+
+## Agent docs exports
+
+Installed packages expose docs for tools and agents:
+
+```ts
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+
+const llmsPath = require.resolve('@grtsnx/payba3/llms.txt');
+const agentGuidePath = require.resolve('@grtsnx/payba3/agents.md');
+
+const llms = readFileSync(llmsPath, 'utf8');
+const agentGuide = readFileSync(agentGuidePath, 'utf8');
+```

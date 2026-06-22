@@ -1,0 +1,67 @@
+---
+title: payba3 client
+description: Understand createPayba3, provider config, and direct provider clients.
+icon: route
+---
+
+# payba3 client
+
+`createPayba3()` creates a lightweight provider selector.
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+## Select a channel
+
+```ts
+const paystack = payba3.use('paystack');
+```
+
+`payba3.use()` returns the provider client for the selected channel.
+
+## List channels
+
+```ts
+const channels = payba3.list();
+```
+
+## Check a channel
+
+```ts
+if (payba3.has(input.channel)) {
+  const provider = payba3.use(input.channel);
+}
+```
+
+## Inject custom channels
+
+You can inject a channel instance for tests or custom wrappers.
+
+```ts
+const payba3 = createPayba3({
+  channels: {
+    paystack: fakePaystack as any,
+  },
+});
+```
+
+Use this for unit tests, mocks, or provider wrappers with observability.
+
+## Direct provider classes
+
+Provider classes are exported for users who do not want the selector.
+
+```ts
+import { PaystackService } from '@grtsnx/payba3';
+
+const paystack = new PaystackService({
+  secretKey: process.env.PAYSTACK_SECRET_KEY,
+});
+```

@@ -1,0 +1,48 @@
+---
+title: Agent safety
+description: Constrain AI agents that integrate or operate payment flows.
+icon: bot-message-square
+---
+
+# Agent safety
+
+AI agents can write integration code, explain provider methods, and build tool wrappers around payba3. They should not receive unconstrained access to money-moving operations.
+
+## Recommended boundaries
+
+- Give agents read-only docs first: `llms.txt`, `agents.md`, `llms-full.txt`, and provider LLM files.
+- Expose narrow tools such as `create_checkout`, `verify_transaction`, or `create_identity_session`.
+- Require explicit human approval before live transfers, refunds, debits, and account creation.
+- Require transaction verification before fulfillment.
+- Redact secrets and access tokens from tool results.
+- Log tool calls with actor, provider, method, reference, amount, and environment.
+
+## Tool design
+
+Prefer this:
+
+```json
+{
+  "name": "create_paystack_checkout",
+  "description": "Create a sandbox Paystack checkout for one order.",
+  "inputSchema": {
+    "type": "object",
+    "required": ["email", "amountInKobo", "reference"],
+    "properties": {
+      "email": { "type": "string" },
+      "amountInKobo": { "type": "number", "minimum": 100 },
+      "reference": { "type": "string" }
+    }
+  }
+}
+```
+
+Avoid exposing a generic tool that lets an agent call any provider method with arbitrary JSON.
+
+## Prompt instruction
+
+Use the package prompt as a starting point:
+
+```text
+@grtsnx/payba3/agents/ide-prompt.md
+```

@@ -1,0 +1,90 @@
+---
+title: Safehaven
+description: OAuth token generation and subaccount creation with Safehaven MFB.
+icon: building-2
+---
+
+# Safehaven
+
+Safehaven is available through the `safehaven` channel.
+
+```ts
+const safehaven = payba3.use('safehaven');
+```
+
+## Signup and docs
+
+| Resource | Link                                                  |
+| -------- | ----------------------------------------------------- |
+| Sandbox  | https://online.sandbox.safehavenmfb.com               |
+| API docs | https://safehavenmfb.readme.io/reference/introduction |
+
+## Configuration
+
+```ts
+const payba3 = createPayba3({
+  safehaven: {
+    environment: 'sandbox',
+    clientId: process.env.SAFEHAVEN_CLIENT_ID,
+    clientAssertion: process.env.SAFEHAVEN_CLIENT_ASSERTION,
+    timeoutMs: 10000,
+  },
+});
+```
+
+Environment variables:
+
+```bash
+SAFEHAVEN_ENVIRONMENT=sandbox
+SAFEHAVEN_CLIENT_ID=
+SAFEHAVEN_CLIENT_ASSERTION=
+SAFEHAVEN_LIVE_CLIENT_ID=
+SAFEHAVEN_LIVE_CLIENT_ASSERTION=
+SAFEHAVEN_TIMEOUT_MS=10000
+SAFEHAVEN_BASE_URL=
+```
+
+## Token generation
+
+Safehaven uses OAuth client credentials with a JWT bearer client assertion. payba3 automatically requests a token before protected calls and refreshes it before expiry.
+
+```ts
+const token = await payba3.use('safehaven').getAccessToken();
+```
+
+Token responses include:
+
+- `access_token`
+- `expires_in`
+- `refresh_token`
+- `client_id`
+- `ibs_client_id`
+- `ibs_user_id`
+
+payba3 uses `ibs_client_id` as the `ClientID` header when available.
+
+## Create a subaccount
+
+```ts
+await payba3.use('safehaven').createSubAccount({
+  phoneNumber: '08000000000',
+  identityType: 'vID',
+  identityId: 'identity-id',
+  emailAddress: 'customer@example.com',
+  externalReference: 'customer_123',
+  autoSweep: false,
+});
+```
+
+## Identity payloads
+
+Depending on the identity flow, Safehaven payloads may use:
+
+- `identityId`
+- `identityNumber`
+- `otp`
+- `callbackUrl`
+
+## Live-mode safety
+
+Subaccount creation can affect real banking resources. In agent and operations workflows, require human approval before live account creation unless the host application has a trusted approval layer.

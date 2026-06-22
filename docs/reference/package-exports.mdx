@@ -1,0 +1,48 @@
+---
+title: Package exports
+description: Import paths exposed by the payba3 package.
+icon: package-open
+---
+
+# Package exports
+
+payba3 exposes runtime code, package metadata, and AI-readable docs through the package exports map.
+
+## Runtime
+
+```ts
+import { createPayba3, Payba3Error } from '@grtsnx/payba3';
+```
+
+## LLM and agent docs
+
+```text
+@grtsnx/payba3/llms.txt
+@grtsnx/payba3/llms-full.txt
+@grtsnx/payba3/agents.json
+@grtsnx/payba3/agents.md
+@grtsnx/payba3/agents/ide-prompt.md
+@grtsnx/payba3/agents/mcp-tools.json
+```
+
+## Provider LLM docs
+
+```text
+@grtsnx/payba3/llms/paystack.txt
+@grtsnx/payba3/llms/safehaven.txt
+@grtsnx/payba3/llms/seerbit.txt
+@grtsnx/payba3/llms/opay.txt
+@grtsnx/payba3/llms/mono.txt
+@grtsnx/payba3/llms/monnify.txt
+@grtsnx/payba3/llms/qoreid.txt
+```
+
+## Package metadata
+
+```text
+@grtsnx/payba3/package.json
+```
+
+## Use in agents
+
+Agents should read the package docs before generating code. They should use provider LLM docs when implementing provider-specific methods.

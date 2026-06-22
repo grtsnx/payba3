@@ -9,6 +9,8 @@
 <p align="center">
   <a href="./LICENSE">License</a>
   ·
+  <a href="./docs/introduction.mdx">Docs</a>
+  ·
   <a href="./CONTRIBUTING.md">Contributing</a>
   ·
   <a href="./SECURITY.md">Security</a>
@@ -33,6 +35,20 @@ await paystack.initializeOneTimeCheckout({
 ```
 
 payba3 is growing. More providers, methods, adapters, and examples will be added over time.
+
+## Documentation
+
+Detailed Mintlify documentation lives in `docs/` with the site map in `docs.json`.
+
+Preview locally:
+
+```bash
+bun run docs:dev
+```
+
+Use a Mintlify-supported LTS Node runtime for docs commands. Node 26 is not supported by the Mintlify CLI at the moment.
+
+The docs cover installation, configuration, provider-specific usage, examples for common frameworks, agent and IDE integration, security, operations, migration, and reference material.
 
 ## About
 

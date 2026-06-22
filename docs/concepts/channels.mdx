@@ -1,0 +1,75 @@
+---
+title: Channels
+description: How provider names, channel selection, and provider clients work.
+icon: panels-top-left
+---
+
+# Channels
+
+A channel is a named provider integration.
+
+```ts
+payba3.use('paystack');
+payba3.use('safehaven');
+payba3.use('seerbit');
+payba3.use('opay');
+payba3.use('mono');
+payba3.use('monnify');
+payba3.use('qoreid');
+```
+
+## Channel names
+
+```ts
+import { PAYBA3_CHANNELS, type Payba3ChannelName } from '@grtsnx/payba3';
+
+const channels: Payba3ChannelName[] = [...PAYBA3_CHANNELS];
+```
+
+## Unsupported channels
+
+Unsupported channels throw `Payba3Error`.
+
+```ts
+payba3.use('unknown');
+```
+
+Use `has()` when accepting provider names from user input.
+
+```ts
+function getProvider(channel: string) {
+  if (!payba3.has(channel)) {
+    throw new Error(`Unsupported channel: ${channel}`);
+  }
+
+  return payba3.use(channel);
+}
+```
+
+## Provider-specific methods
+
+payba3 does not flatten every provider into a lowest-common-denominator API. That would hide important provider differences. Instead, it gives each provider a typed client with provider-specific methods.
+
+Example:
+
+```ts
+await payba3.use('safehaven').createSubAccount({
+  phoneNumber: '08000000000',
+  identityType: 'vID',
+  identityId: 'identity-id',
+  emailAddress: 'customer@example.com',
+  externalReference: 'customer_123',
+});
+```
+
+## When to use a wrapper
+
+Use a business wrapper when you want your app or agent to expose stable actions such as:
+
+- `initializeCheckout`
+- `verifyPayment`
+- `createCustomerAccount`
+- `verifyBusinessIdentity`
+- `sendPayoutForApprovedInvoice`
+
+Keep the wrapper narrow and validate inputs before calling payba3.

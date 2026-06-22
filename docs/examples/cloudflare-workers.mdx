@@ -1,0 +1,54 @@
+---
+title: Cloudflare Workers
+description: Use payba3 from edge-style handlers when Node-compatible APIs are available.
+icon: cloud
+---
+
+# Cloudflare Workers
+
+payba3 is framework-neutral, but some provider helpers use Node-compatible crypto behavior for request signing or webhook verification. For Workers-style deployments, enable the runtime compatibility your deployment needs and keep secrets in bindings.
+
+## Handler shape
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+export interface Env {
+  PAYSTACK_SECRET_KEY: string;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const payba3 = createPayba3({
+      paystack: {
+        secretKey: env.PAYSTACK_SECRET_KEY,
+      },
+    });
+
+    if (
+      request.method === 'POST' &&
+      new URL(request.url).pathname === '/checkout'
+    ) {
+      const body = await request.json();
+
+      const checkout = await payba3.use('paystack').initializeOneTimeCheckout({
+        email: body.email,
+        amountInKobo: body.amountInKobo,
+        currency: 'NGN',
+        reference: body.reference,
+      });
+
+      return Response.json(checkout);
+    }
+
+    return new Response('Not found', { status: 404 });
+  },
+};
+```
+
+## Edge guidance
+
+- Do not store payment secrets in source code.
+- Prefer one provider client per request when credentials come from request-scoped bindings.
+- Keep webhook verification on a runtime that supports the exact crypto helpers used by the provider.
+- Test payment flows against the deployed runtime, not only local Node.js.

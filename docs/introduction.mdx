@@ -1,0 +1,83 @@
+---
+title: Introduction
+description: What payba3 is, who it is for, and how it fits into apps, agents, and tools.
+icon: house
+---
+
+# payba3
+
+payba3 is a framework-neutral payment integration package for server-side TypeScript and JavaScript. It gives developers one predictable way to configure payment providers, select a provider by name, and call provider-specific methods.
+
+It is designed for:
+
+- application backends
+- scripts and background jobs
+- internal payment tooling
+- IDE coding agents
+- AI tool servers
+- MCP-style wrappers
+- workflow automation systems
+
+The package does not require Nest, Express, Fastify, Next.js, or any other framework at runtime.
+
+## The core idea
+
+Install one package:
+
+```bash
+npm install @grtsnx/payba3
+```
+
+Create one client:
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+Select one provider:
+
+```ts
+const paystack = payba3.use('paystack');
+```
+
+Call the provider:
+
+```ts
+await paystack.initializeOneTimeCheckout({
+  email: 'customer@example.com',
+  amountInKobo: 250000,
+  currency: 'NGN',
+  reference: 'order_123',
+});
+```
+
+## Supported channels
+
+| Channel   | Primary use cases                                             |
+| --------- | ------------------------------------------------------------- |
+| Paystack  | Checkout, subscriptions, transfers, dedicated accounts        |
+| Safehaven | OAuth token generation, subaccounts, banking APIs             |
+| SeerBit   | Virtual accounts and collections                              |
+| OPay      | Cashier checkout, signed payment APIs, refunds, OTP/PIN flows |
+| Mono      | Open banking, account linking, payments, BVN lookup           |
+| Monnify   | Transactions, reserved accounts, transfers, refunds           |
+| QoreID    | Identity verification, hosted sessions, CAC lookup            |
+
+## Design principles
+
+- Configure only the provider you use.
+- Keep secrets server-side.
+- Prefer explicit provider config when generating code.
+- Let payba3 handle signing, token reuse, and token refresh where supported.
+- Expose narrow business actions to agents instead of raw provider clients.
+- Verify webhooks and transaction status before delivering value.
+
+## What payba3 is not
+
+payba3 is not a payment gateway, wallet, ledger, database, PCI vault, or business workflow engine. It is a provider integration surface. Your application remains responsible for authorization, persistence, idempotency, business rules, and user-facing payment state.

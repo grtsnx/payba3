@@ -1,0 +1,96 @@
+---
+title: MCP tool servers
+description: Wrap payba3 in MCP-style tools, resources, and prompts.
+icon: plug
+---
+
+# MCP tool servers
+
+payba3 can be wrapped by MCP-style servers and other agent tool runtimes. The rule is simple: expose narrow, validated actions, not raw provider clients.
+
+## Recommended resources
+
+Expose these docs as tool-server resources:
+
+```text
+package:@grtsnx/payba3/llms.txt
+package:@grtsnx/payba3/llms-full.txt
+package:@grtsnx/payba3/agents.md
+package:@grtsnx/payba3/agents.json
+package:@grtsnx/payba3/agents/mcp-tools.json
+```
+
+## Tool schema file
+
+payba3 ships a suggested MCP-style schema:
+
+```text
+@grtsnx/payba3/agents/mcp-tools.json
+```
+
+It includes examples such as:
+
+- `payba3_initialize_paystack_checkout`
+- `payba3_verify_paystack_transaction`
+- `payba3_create_safehaven_subaccount`
+- `payba3_verify_qoreid_cac`
+- `payba3_create_monnify_reserved_account`
+
+## Wrapper example
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+
+export async function payba3InitializePaystackCheckout(input: {
+  email: string;
+  amountInKobo: number;
+  reference: string;
+}) {
+  return payba3.use('paystack').initializeOneTimeCheckout({
+    email: input.email,
+    amountInKobo: input.amountInKobo,
+    currency: 'NGN',
+    reference: input.reference,
+  });
+}
+```
+
+## Approval policy
+
+Require human approval for:
+
+- live transfers
+- refunds
+- debits
+- subaccount creation
+- reserved account creation
+- identity-verification calls that expose sensitive data
+
+Approval can be skipped only when the host app already enforces a trusted approval workflow.
+
+## Observability
+
+Log:
+
+- provider name
+- action name
+- app-level reference
+- provider reference
+- sanitized status
+
+Do not log:
+
+- API keys
+- client assertions
+- bearer tokens
+- refresh tokens
+- BVN
+- NIN
+- OTP
+- full webhook payloads with sensitive data

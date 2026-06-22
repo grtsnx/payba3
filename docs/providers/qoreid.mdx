@@ -1,0 +1,83 @@
+---
+title: QoreID
+description: Hosted sessions and CAC verification with QoreID.
+icon: badge-check
+---
+
+# QoreID
+
+QoreID is available through the `qoreid` channel.
+
+```ts
+const qoreid = payba3.use('qoreid');
+```
+
+## Signup and docs
+
+| Resource | Link                                   |
+| -------- | -------------------------------------- |
+| Signup   | https://dashboard.qoreid.com/dashboard |
+| API docs | https://docs.qoreid.com/               |
+
+## Configuration
+
+```ts
+const payba3 = createPayba3({
+  qoreid: {
+    environment: 'sandbox',
+    clientId: process.env.QOREID_CLIENT,
+    secret: process.env.QOREID_SECRET,
+  },
+});
+```
+
+Environment variables:
+
+```bash
+QOREID_ENVIRONMENT=sandbox
+QOREID_BASE_URL=
+QOREID_CLIENT=
+QOREID_SECRET=
+QOREID_LIVE_CLIENT=
+QOREID_LIVE_SECRET=
+```
+
+## Token handling
+
+QoreID access tokens are generated automatically and refreshed before stale. payba3 accepts token responses with either `expiresIn` or `expires_in`.
+
+## Common methods
+
+| Method                                 | Purpose                            |
+| -------------------------------------- | ---------------------------------- |
+| `getToken()`                           | Get an access token                |
+| `createSession(input)`                 | Create hosted verification session |
+| `verifyCacNumber(cacNumber, options?)` | Verify CAC number                  |
+
+## Hosted session
+
+```ts
+await payba3.use('qoreid').createSession({
+  customerReference: 'customer_123',
+  flow: 'kyc',
+});
+```
+
+## CAC basic
+
+```ts
+await payba3.use('qoreid').verifyCacNumber('RC123456');
+```
+
+## CAC premium
+
+```ts
+await payba3.use('qoreid').verifyCacNumber('RC123456', {
+  version: 'v3',
+  level: 'premium',
+});
+```
+
+## Agent safety
+
+Identity verification can involve sensitive business or personal data. Do not expose raw provider responses to untrusted users or free-form agent output without redaction.

@@ -1,0 +1,64 @@
+---
+title: Token refresh
+description: Providers with automatic access-token generation and refresh.
+icon: refresh-cw
+---
+
+# Token refresh
+
+Some providers require access tokens that expire. payba3 automatically obtains, caches, and refreshes these tokens for supported providers.
+
+## Safehaven
+
+Safehaven uses OAuth client credentials.
+
+- Token endpoint: `/oauth2/token`
+- Expiry source: `expires_in`
+- Account-call client header: `ibs_client_id` from token response
+
+```ts
+await payba3.use('safehaven').createSubAccount({
+  phoneNumber: '08000000000',
+  identityType: 'vID',
+  identityId: 'identity-id',
+  emailAddress: 'customer@example.com',
+  externalReference: 'customer_123',
+});
+```
+
+The service obtains an access token before the first account call and refreshes it before it becomes stale.
+
+## QoreID
+
+QoreID tokens are fetched automatically.
+
+- Token endpoint: `/token`
+- Expiry sources: `expiresIn` or `expires_in`
+
+```ts
+await payba3.use('qoreid').verifyCacNumber('RC123456');
+```
+
+## Monnify
+
+Monnify access tokens are fetched through Basic auth.
+
+- Token endpoint: `/api/v1/auth/login`
+- Expiry source: JWT `exp` when available
+
+```ts
+await payba3.use('monnify').createReservedAccount({
+  accountReference: 'customer_123',
+  accountName: 'Jane Doe',
+  customerName: 'Jane Doe',
+  customerEmail: 'jane@example.com',
+});
+```
+
+## Testing refresh
+
+The repository includes stale-token tests for Safehaven, QoreID, and Monnify. When expanding providers, add tests that prove:
+
+- fresh tokens are reused
+- stale tokens are refreshed
+- refreshed tokens are used in subsequent requests

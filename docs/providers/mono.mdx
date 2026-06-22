@@ -1,0 +1,86 @@
+---
+title: Mono
+description: Account linking, payments, disbursement sources, and BVN lookup with Mono.
+icon: link
+---
+
+# Mono
+
+Mono is available through the `mono` channel.
+
+```ts
+const mono = payba3.use('mono');
+```
+
+## Signup and docs
+
+| Resource | Link                                 |
+| -------- | ------------------------------------ |
+| Signup   | https://mono.co/signup               |
+| API docs | https://docs.mono.co/docs/quickstart |
+
+## Configuration
+
+```ts
+const payba3 = createPayba3({
+  mono: {
+    environment: 'sandbox',
+    secretKey: process.env.MONO_SECRET_KEY,
+  },
+});
+```
+
+Environment variables:
+
+```bash
+MONO_ENVIRONMENT=sandbox
+MONO_BASE_URL=
+MONO_SECRET_KEY=
+MONO_LIVE_SECRET_KEY=
+```
+
+## Common methods
+
+| Method                                   | Purpose                                |
+| ---------------------------------------- | -------------------------------------- |
+| `initiateAccountLinking(input)`          | Start account-linking flow             |
+| `exchangeToken(code)`                    | Exchange temporary code                |
+| `getAccount(accountId)`                  | Fetch account                          |
+| `getTransactions(accountId, query?)`     | Fetch transactions                     |
+| `initiatePayment(input)`                 | Start a Mono payment                   |
+| `verifyPayment(reference)`               | Verify payment                         |
+| `createDisbursementSourceAccount(input)` | Create source account for disbursement |
+| `initiateBvnLookup(input)`               | Start BVN lookup                       |
+
+## Account linking
+
+```ts
+await payba3.use('mono').initiateAccountLinking({
+  reference: 'link_123',
+  customer: {
+    email: 'customer@example.com',
+  },
+  redirect_url: 'https://example.com/mono/return',
+});
+```
+
+## Exchange token
+
+```ts
+await payba3.use('mono').exchangeToken('temporary-code');
+```
+
+## Transactions
+
+```ts
+await payba3.use('mono').getTransactions('account_id', {
+  from: '2026-01-01',
+  page: 1,
+});
+```
+
+## Payment verification
+
+```ts
+await payba3.use('mono').verifyPayment('payment_reference');
+```

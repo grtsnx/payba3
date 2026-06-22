@@ -1,0 +1,44 @@
+---
+title: Agent overview
+description: How AI agents, IDE assistants, and tool servers should understand payba3.
+icon: bot
+---
+
+# Agent overview
+
+payba3 includes package-exported documentation for AI agents and IDEs. Agents should not scrape source files first. They should resolve the package docs and follow the integration contract.
+
+## Discovery order
+
+1. `@grtsnx/payba3/llms.txt`
+2. `@grtsnx/payba3/agents.md`
+3. `@grtsnx/payba3/llms-full.txt`
+4. Provider-specific docs under `@grtsnx/payba3/llms/<provider>.txt`
+
+## Machine-readable docs
+
+```text
+@grtsnx/payba3/agents.json
+@grtsnx/payba3/agents/mcp-tools.json
+```
+
+## Prompt file
+
+```text
+@grtsnx/payba3/agents/ide-prompt.md
+```
+
+## Core agent rules
+
+- Generate server-side code only.
+- Import `createPayba3` from `@grtsnx/payba3`.
+- Configure only the provider being used.
+- Keep all secrets in environment variables or a server-side secret manager.
+- Default to sandbox unless live mode is explicitly requested.
+- Validate input payloads before calling payba3.
+- Verify webhooks and transaction status server-side.
+- Require human approval for live transfers, refunds, debits, and account creation unless the host app already has an approval workflow.
+
+## Why this matters
+
+Payment integrations can move money, create accounts, and process sensitive identity data. Agents need a constrained contract so they produce safe, auditable code.

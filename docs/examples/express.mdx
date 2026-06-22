@@ -1,0 +1,84 @@
+---
+title: Express
+description: Add payba3 to an Express API with checkout and webhook routes.
+icon: route
+---
+
+# Express
+
+payba3 is framework-neutral, so Express only needs a shared server-side client.
+
+## Client
+
+```ts
+// payba3.ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+export const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+## Checkout route
+
+```ts
+import express from 'express';
+import { payba3 } from './payba3';
+
+const app = express();
+
+app.use(express.json());
+
+app.post('/payments/paystack/checkout', async (request, response, next) => {
+  try {
+    const checkout = await payba3.use('paystack').initializeOneTimeCheckout({
+      email: request.body.email,
+      amountInKobo: request.body.amountInKobo,
+      currency: 'NGN',
+      reference: request.body.reference,
+    });
+
+    response.json(checkout);
+  } catch (error) {
+    next(error);
+  }
+});
+```
+
+## Webhook route
+
+Use a raw body parser for routes where the provider signature depends on the exact request body.
+
+```ts
+app.post(
+  '/webhooks/paystack',
+  express.raw({ type: 'application/json' }),
+  async (request, response, next) => {
+    try {
+      payba3
+        .use('paystack')
+        .verifyWebhookSignature(request.body, request.headers);
+
+      const event = JSON.parse(request.body.toString('utf8'));
+
+      // Store event idempotently and verify transaction status before fulfilment.
+
+      response.sendStatus(200);
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+```
+
+## Error handling
+
+```ts
+app.use((error, _request, response, _next) => {
+  response.status(error.statusCode ?? 500).json({
+    message: error.message ?? 'Payment request failed',
+  });
+});
+```

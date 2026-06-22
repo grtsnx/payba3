@@ -1,0 +1,90 @@
+---
+title: Quickstart
+description: Install payba3 and create your first provider call.
+icon: zap
+---
+
+# Quickstart
+
+This guide creates a Paystack checkout through payba3. The same pattern applies to every provider.
+
+## 1. Install
+
+```bash
+npm install @grtsnx/payba3
+```
+
+Or with Bun:
+
+```bash
+bun add @grtsnx/payba3
+```
+
+## 2. Add provider credentials
+
+Use environment variables or your server-side secret manager.
+
+```bash
+PAYSTACK_SECRET_KEY=sk_test_xxx
+```
+
+## 3. Create a payba3 client
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+export const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+## 4. Use a provider
+
+```ts
+export async function createCheckout(input: {
+  email: string;
+  amountInKobo: number;
+  reference: string;
+}) {
+  return payba3.use('paystack').initializeOneTimeCheckout({
+    email: input.email,
+    amountInKobo: input.amountInKobo,
+    currency: 'NGN',
+    reference: input.reference,
+  });
+}
+```
+
+## 5. Verify before delivering value
+
+Never mark an order as paid only because a browser returned from checkout. Verify the transaction server-side.
+
+```ts
+export async function verifyCheckout(reference: string) {
+  return payba3.use('paystack').verifyTransaction(reference);
+}
+```
+
+## 6. Handle errors
+
+payba3 throws `Payba3Error` for package-level and provider-wrapper errors.
+
+```ts
+import { Payba3Error } from '@grtsnx/payba3';
+
+try {
+  await createCheckout({
+    email: 'customer@example.com',
+    amountInKobo: 250000,
+    reference: 'order_123',
+  });
+} catch (error) {
+  if (error instanceof Payba3Error) {
+    console.error(error.getStatus(), error.getResponse());
+  }
+
+  throw error;
+}
+```

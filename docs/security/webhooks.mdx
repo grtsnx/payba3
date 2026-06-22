@@ -1,0 +1,51 @@
+---
+title: Webhooks
+description: Verify payment provider callbacks safely.
+icon: webhook
+---
+
+# Webhooks
+
+Webhooks are notifications, not final proof that money or identity state changed. Verify signatures and provider state before changing local business state.
+
+## Safe webhook flow
+
+1. Receive webhook with the raw request body.
+2. Verify the provider signature.
+3. Parse the body after verification.
+4. Store the event idempotently.
+5. Fetch provider state server-side when needed.
+6. Update local state once.
+7. Return a success response.
+
+## Raw body
+
+Some signatures depend on the exact bytes received. If your framework parses JSON before verification, signature checks may fail or become unsafe.
+
+```ts
+const rawBody = await request.text();
+
+payba3.use('paystack').verifyWebhookSignature(rawBody, {
+  'x-paystack-signature': request.headers.get('x-paystack-signature'),
+});
+```
+
+## Idempotency
+
+Providers may retry webhooks. Store a unique event id or transaction reference and make processing repeat-safe.
+
+```ts
+if (await eventAlreadyProcessed(event.id)) {
+  return { ok: true };
+}
+
+await processEventOnce(event);
+```
+
+## Provider support
+
+| Provider | payba3 helper                             |
+| -------- | ----------------------------------------- |
+| Paystack | `verifyWebhookSignature(body, headers)`   |
+| Monnify  | `verifyWebhookSignature(body, signature)` |
+| OPay     | `verifyCallback(payload, signature)`      |

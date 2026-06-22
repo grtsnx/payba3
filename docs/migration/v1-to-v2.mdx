@@ -1,0 +1,68 @@
+---
+title: v1 to v2
+description: Migrate from the Nest-focused package shape to the framework-neutral payba3 client.
+icon: arrow-right-left
+---
+
+# Migrate from v1 to v2
+
+payba3 2.x is framework-neutral. The primary API is `createPayba3`.
+
+## What changed
+
+| Area            | v1                              | v2                                  |
+| --------------- | ------------------------------- | ----------------------------------- |
+| Runtime shape   | Nest-oriented package           | Framework-neutral package           |
+| Import          | Framework service/module usage  | `createPayba3` from package root    |
+| Dependencies    | Nest runtime as package concern | No runtime framework dependency     |
+| Agent docs      | Limited                         | Package-exported LLM and agent docs |
+| Provider access | Application-specific            | `payba3.use('provider')`            |
+
+## New client
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+});
+```
+
+## Nest migration
+
+Wrap the client in your own application provider.
+
+```ts
+import { Injectable } from '@nestjs/common';
+import { createPayba3 } from '@grtsnx/payba3';
+
+@Injectable()
+export class PaymentsService {
+  private readonly payba3 = createPayba3({
+    paystack: {
+      secretKey: process.env.PAYSTACK_SECRET_KEY,
+    },
+  });
+
+  checkout(input: { email: string; amountInKobo: number; reference: string }) {
+    return this.payba3.use('paystack').initializeOneTimeCheckout({
+      email: input.email,
+      amountInKobo: input.amountInKobo,
+      currency: 'NGN',
+      reference: input.reference,
+    });
+  }
+}
+```
+
+## Agent migration
+
+Point agents to the package docs:
+
+```text
+@grtsnx/payba3/llms.txt
+@grtsnx/payba3/agents.md
+@grtsnx/payba3/agents.json
+```

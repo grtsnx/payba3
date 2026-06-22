@@ -1,0 +1,77 @@
+---
+title: Configuration
+description: Configure providers with explicit options, environment variables, or both.
+icon: settings
+---
+
+# Configuration
+
+payba3 supports two configuration styles:
+
+1. explicit `createPayba3()` options
+2. provider-specific environment variables
+
+Explicit options win over environment variables.
+
+## Recommended pattern
+
+```ts
+import { createPayba3 } from '@grtsnx/payba3';
+
+export const payba3 = createPayba3({
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY,
+  },
+  safehaven: {
+    environment:
+      process.env.SAFEHAVEN_ENVIRONMENT === 'live' ? 'live' : 'sandbox',
+    clientId: process.env.SAFEHAVEN_CLIENT_ID,
+    clientAssertion: process.env.SAFEHAVEN_CLIENT_ASSERTION,
+  },
+});
+```
+
+## Configure only what you use
+
+Unused providers do not need credentials.
+
+```ts
+const payba3 = createPayba3({
+  qoreid: {
+    clientId: process.env.QOREID_CLIENT,
+    secret: process.env.QOREID_SECRET,
+  },
+});
+
+await payba3.use('qoreid').verifyCacNumber('RC123456');
+```
+
+## Sandbox by default
+
+Provider environment helpers normalize `production` and `live` to live mode. Everything else defaults to sandbox.
+
+```ts
+const payba3 = createPayba3({
+  monnify: {
+    environment: 'live',
+    apiKey: process.env.MONNIFY_LIVE_API_KEY,
+    secretKey: process.env.MONNIFY_LIVE_SECRET_KEY,
+    contractCode: process.env.MONNIFY_LIVE_CONTRACT_CODE,
+  },
+});
+```
+
+## Environment variables
+
+Every provider page includes the environment variables for that provider. The full list is available in [Environment variables](/docs/reference/environment-variables).
+
+## Secret handling
+
+Use a server-side secret manager in production. Do not put provider credentials in:
+
+- frontend code
+- public environment variables
+- generated docs
+- tests committed to git
+- logs
+- LLM prompts

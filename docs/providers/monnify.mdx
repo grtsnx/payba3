@@ -1,0 +1,103 @@
+---
+title: Monnify
+description: Transactions, bank transfers, reserved accounts, disbursements, refunds, and subaccounts with Monnify.
+icon: landmark
+---
+
+# Monnify
+
+Monnify is available through the `monnify` channel.
+
+```ts
+const monnify = payba3.use('monnify');
+```
+
+## Signup and docs
+
+| Resource | Link                                                       |
+| -------- | ---------------------------------------------------------- |
+| Signup   | https://app.monnify.com/create-account                     |
+| API docs | https://developers.monnify.com/docs/collections/quickstart |
+
+## Configuration
+
+```ts
+const payba3 = createPayba3({
+  monnify: {
+    environment: 'sandbox',
+    apiKey: process.env.MONNIFY_API_KEY,
+    secretKey: process.env.MONNIFY_SECRET_KEY,
+    contractCode: process.env.MONNIFY_CONTRACT_CODE,
+  },
+});
+```
+
+Environment variables:
+
+```bash
+MONNIFY_ENVIRONMENT=sandbox
+MONNIFY_BASE_URL=
+MONNIFY_API_KEY=
+MONNIFY_SECRET_KEY=
+MONNIFY_CONTRACT_CODE=
+MONNIFY_LIVE_API_KEY=
+MONNIFY_LIVE_SECRET_KEY=
+MONNIFY_LIVE_CONTRACT_CODE=
+```
+
+## Token handling
+
+Monnify access tokens are generated automatically and refreshed before stale. payba3 decodes the JWT `exp` claim when available.
+
+## Common methods
+
+| Method                                    | Purpose                          |
+| ----------------------------------------- | -------------------------------- |
+| `initializeTransaction(input)`            | Initialize checkout transaction  |
+| `initializeBankTransfer(input)`           | Initialize bank transfer payment |
+| `getTransactionStatus(reference)`         | Fetch transaction status         |
+| `queryTransactionStatus(query)`           | Query transaction status         |
+| `createReservedAccount(input)`            | Create reserved account          |
+| `getReservedAccountDetails(reference)`    | Fetch reserved account           |
+| `initiateSingleTransfer(input)`           | Initiate transfer                |
+| `createSubAccounts(input)`                | Create subaccounts               |
+| `initiateRefund(input)`                   | Start refund                     |
+| `verifyWebhookSignature(body, signature)` | Verify webhook signature         |
+
+## Initialize transaction
+
+```ts
+await payba3.use('monnify').initializeTransaction({
+  amount: 10000,
+  customerName: 'Jane Doe',
+  customerEmail: 'jane@example.com',
+  paymentReference: 'order_123',
+  paymentDescription: 'Order payment',
+});
+```
+
+## Create reserved account
+
+```ts
+await payba3.use('monnify').createReservedAccount({
+  accountReference: 'customer_123',
+  accountName: 'Jane Doe',
+  customerName: 'Jane Doe',
+  customerEmail: 'jane@example.com',
+  bvn: '12345678901',
+});
+```
+
+## Transfer
+
+```ts
+await payba3.use('monnify').initiateSingleTransfer({
+  amount: 50000,
+  reference: 'transfer_123',
+  narration: 'Vendor payout',
+  destinationBankCode: '058',
+  destinationAccountNumber: '0123456789',
+});
+```
+
+Add human approval before live transfers.

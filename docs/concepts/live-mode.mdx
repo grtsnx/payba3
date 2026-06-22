@@ -1,0 +1,63 @@
+---
+title: Sandbox and live mode
+description: Switch providers from sandbox to live safely.
+icon: toggle-right
+---
+
+# Sandbox and live mode
+
+payba3 defaults to sandbox-like behavior unless a provider environment is set to `live` or `production`.
+
+## Explicit live configuration
+
+```ts
+const payba3 = createPayba3({
+  paystack: {
+    environment: 'live',
+    secretKey: process.env.PAYSTACK_SECRET_KEY_LIVE,
+  },
+});
+```
+
+## Environment variable live configuration
+
+```bash
+PAYSTACK_ENVIRONMENT=live
+PAYSTACK_SECRET_KEY_LIVE=sk_live_xxx
+```
+
+## Provider-specific live credentials
+
+Some providers use separate live credential names:
+
+- `PAYSTACK_SECRET_KEY_LIVE`
+- `SAFEHAVEN_LIVE_CLIENT_ID`
+- `SAFEHAVEN_LIVE_CLIENT_ASSERTION`
+- `OPAY_LIVE_MERCHANT_ID`
+- `OPAY_LIVE_PUBLIC_KEY`
+- `OPAY_LIVE_SECRET_KEY`
+- `MONO_LIVE_SECRET_KEY`
+- `MONNIFY_LIVE_API_KEY`
+- `MONNIFY_LIVE_SECRET_KEY`
+- `MONNIFY_LIVE_CONTRACT_CODE`
+- `SEERBIT_LIVE_PUBLIC_KEY`
+- `SEERBIT_LIVE_SECRET_KEY`
+- `QOREID_LIVE_CLIENT`
+- `QOREID_LIVE_SECRET`
+
+## Production safety checklist
+
+Before live mode:
+
+- verify credentials are loaded from a secret manager
+- set idempotency rules in your app
+- add webhook verification
+- verify transaction status before fulfillment
+- add human approval for refunds, transfers, debits, and account creation
+- redact logs
+- store provider references and transaction IDs
+- monitor failures and retries
+
+## Agent safety
+
+Agents should never switch to live mode without explicit developer instruction. For money-moving actions, add a human approval step unless the host app already enforces approvals.
