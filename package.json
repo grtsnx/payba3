@@ -1,6 +1,6 @@
 {
-  "name": "payba3",
-  "version": "0.0.1",
+  "name": "@grtsnx/payba3",
+  "version": "1.0.0",
   "description": "One payment integration surface for many payment channels.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

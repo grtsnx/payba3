@@ -63,19 +63,19 @@ Use payba3 when you want:
 ## Installation
 
 ```bash
-npm install payba3
+npm install @grtsnx/payba3
 ```
 
 ```bash
-yarn add payba3
+yarn add @grtsnx/payba3
 ```
 
 ```bash
-pnpm add payba3
+pnpm add @grtsnx/payba3
 ```
 
 ```bash
-bun add payba3
+bun add @grtsnx/payba3
 ```
 
 payba3 ships compiled JavaScript, TypeScript declarations, and an npm exports map. It is tested with npm and Bun install smoke checks in CI. Yarn and pnpm can consume the same npm package metadata.
@@ -97,7 +97,7 @@ bun install
 Register payba3 in your application, then use `Payba3Service` to select a channel.
 
 ```ts
-import { Payba3Service } from 'payba3';
+import { Payba3Service } from '@grtsnx/payba3';
 
 export class Payments {
   constructor(private readonly payba3: Payba3Service) {}

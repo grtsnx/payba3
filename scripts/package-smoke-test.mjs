@@ -1,10 +1,20 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const packageJson = JSON.parse(
+  readFileSync(path.join(rootDir, 'package.json'), 'utf8'),
+);
+const packageName = packageJson.name;
 const installerIndex = process.argv.indexOf('--installer');
 const installer =
   installerIndex === -1 ? 'npm' : (process.argv[installerIndex + 1] ?? 'npm');
@@ -46,7 +56,7 @@ const peerPackages = [
 ];
 
 const smokeSource = `
-const pkg = require('payba3');
+const pkg = require('${packageName}');
 const required = [
   'LibModule',
   'Payba3Service',
@@ -64,7 +74,7 @@ for (const channel of ['paystack', 'safehaven', 'seerbit', 'opay', 'mono', 'monn
     throw new Error('Missing channel: ' + channel);
   }
 }
-console.log('payba3 import smoke passed:', pkg.PAYBA3_CHANNELS.join(', '));
+console.log('${packageName} import smoke passed:', pkg.PAYBA3_CHANNELS.join(', '));
 `;
 
 try {

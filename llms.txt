@@ -14,7 +14,7 @@ payba3 is a developer-first integration surface for multiple payment and verific
 
 ## Integration Rules
 
-- Import payba3 from the package root and select providers with `Payba3Service.use('<provider>')`.
+- Import payba3 from `@grtsnx/payba3` and select providers with `Payba3Service.use('<provider>')`.
 - Configure only the provider you use.
 - Use provider-specific environment switches such as `SAFEHAVEN_ENVIRONMENT`, `OPAY_ENVIRONMENT`, `MONNIFY_ENVIRONMENT`, `PAYSTACK_ENVIRONMENT`, `QOREID_ENVIRONMENT`, and `SEERBIT_ENVIRONMENT`.
 - Keep secrets server-side.
