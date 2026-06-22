@@ -57,6 +57,9 @@ jobs:
       - name: Unit tests
         run: bun run test
 
+      - name: Provider contract tests
+        run: bun run test:providers
+
       - name: E2E tests
         run: bun run test:e2e
 
@@ -144,15 +147,17 @@ jobs:
 
           ```mermaid
           flowchart LR
-            A["1 Audit + lint"] --> T["2 Unit + E2E tests"]
-            T --> B["3 Build"]
+            A["1 Audit + lint"] --> T["2 Unit tests"]
+            T --> P["Provider contract tests"]
+            P --> E["E2E tests"]
+            E --> B["3 Build"]
             B --> S["4 Smoke test"]
           ```
 
           | Stage | Result |
           | --- | --- |
           | Audit + lint | `${{ needs.audit.result }}` |
-          | Tests | `${{ needs.test.result }}` |
+          | Unit + provider + E2E tests | `${{ needs.test.result }}` |
           | Build | `${{ needs.build.result }}` |
           | Smoke | `${{ needs.smoke.result }}` |
           MARKDOWN
